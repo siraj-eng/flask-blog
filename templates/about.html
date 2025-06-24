@@ -1,5 +1,15 @@
-{% extends "layout.html" %}
+{% extends "base.html" %}
+
+{% block title %}Home - My Flask App{% endblock %}
+
 {% block content %}
-  <h1>About</h1>
-  <p>This is the about page.</p>
+<h1>Welcome to My Flask App</h1>
+<p>This is the home page of your Flask application with user registration functionality.</p>
+
+{% if 'user_id' in session %}
+    <p>Hello, {{ session['username'] }}! You are logged in.</p>
+    <a href="{{ url_for('dashboard') }}" class="btn">Go to Dashboard</a>
+{% else %}
+    <p>Please <a href="{{ url_for('register') }}">register</a> or <a href="{{ url_for('login') }}">login</a> to access more features.</p>
+{% endif %}
 {% endblock %}

@@ -1,16 +1,15 @@
-{% extends "layout.html" %}
-{% block title %}Home{% endblock %}
+{% extends "base.html" %}
+
+{% block title %}Home - My Flask App{% endblock %}
+
 {% block content %}
-    <h1>Welcome to Flask Blog</h1>
-    {% for post in posts %}
-        <div class="card mb-4">
-            <div class="card-body">
-                <h2 class="card-title">{{ post.title }}</h2>
-                <p class="card-text">{{ post.content }}</p>
-                <div class="text-muted">
-                    Posted by {{ post.author.username }} on {{ post.date_posted.strftime('%Y-%m-%d') }}
-                </div>
-            </div>
-        </div>
-    {% endfor %}
+<h1>Welcome to My Flask App</h1>
+<p>This is the home page of your Flask application with user registration functionality.</p>
+
+{% if 'user_id' in session %}
+    <p>Hello, {{ session['username'] }}! You are logged in.</p>
+    <a href="{{ url_for('dashboard') }}" class="btn">Go to Dashboard</a>
+{% else %}
+    <p>Please <a href="{{ url_for('register') }}">register</a> or <a href="{{ url_for('login') }}">login</a> to access more features.</p>
+{% endif %}
 {% endblock %}
