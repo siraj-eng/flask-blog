@@ -1,15 +1,17 @@
 {% extends "base.html" %}
 
-{% block title %}Home - My Flask App{% endblock %}
+{% block title %}About - HR System{% endblock %}
 
 {% block content %}
-<h1>Welcome to My Flask App</h1>
-<p>This is the home page of your Flask application with user registration functionality.</p>
-
-{% if 'user_id' in session %}
-    <p>Hello, {{ session['username'] }}! You are logged in.</p>
-    <a href="{{ url_for('dashboard') }}" class="btn">Go to Dashboard</a>
-{% else %}
-    <p>Please <a href="{{ url_for('register') }}">register</a> or <a href="{{ url_for('login') }}">login</a> to access more features.</p>
-{% endif %}
+<div class="container mt-4">
+    <h1>About HR System</h1>
+    <p>This is a modern HR management system designed to streamline your HR processes.</p>
+    <p>Features include:</p>
+    <ul>
+        <li>Employee management</li>
+        <li>Leave tracking</li>
+        <li>Announcements</li>
+        <li>Role-based access control</li>
+    </ul>
+</div>
 {% endblock %}

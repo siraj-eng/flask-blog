@@ -4,9 +4,9 @@ import sqlite3
 import os
 from functools import wraps
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', template_folder='templates')
 app.secret_key = 'b6cf94b299a1f56d63199b2298f7095c3ee344bd1bb1a77cfd6e03d4a2b95b71'
-app.config['DATABASE'] = 'users.db'
+app.config['DATABASE'] = 'hr_system.db'
 
 # Database Helper Functions
 def get_db():
@@ -17,55 +17,109 @@ def get_db():
 def init_db():
     db = get_db()
     try:
-        with app.open_resource('schema.sql', mode='r') as f:
-            db.cursor().executescript(f.read())
+        # Drop existing tables if they exist
+        db.execute('DROP TABLE IF EXISTS users')
+        db.execute('DROP TABLE IF EXISTS announcements')
+        
+        # Create new tables with updated schema
+        db.execute('''
+        CREATE TABLE users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            role TEXT NOT NULL DEFAULT 'user',
+            full_name TEXT,
+            department TEXT,
+            position TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )''')
+        
+        db.execute('''
+        CREATE TABLE announcements (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            content TEXT NOT NULL,
+            author_id INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (author_id) REFERENCES users (id)
+        )''')
+        
+        # Insert default admin user
+        db.execute(
+            'INSERT INTO users (username, email, password_hash, role, full_name) VALUES (?, ?, ?, ?, ?)',
+            ('admin', 'admin@hrsystem.com', generate_password_hash('admin123'), 'admin', 'System Administrator')
+        )
+        
+        # Insert sample announcement
+        db.execute(
+            'INSERT INTO announcements (title, content, author_id) VALUES (?, ?, ?)',
+            ('Welcome to HR System', 'This is a sample announcement.', 1)
+        )
+        
         db.commit()
+        print("✅ Database tables created successfully.")
     except Exception as e:
-        print(f"Error initializing database: {e}")
+        print(f"❌ Error initializing database: {e}")
+        db.rollback()
+        raise e
     finally:
         db.close()
 
-# Create schema.sql file if it doesn't exist
-def create_schema_file():
-    schema_content = '''
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE NOT NULL,
-        email TEXT UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL
-    );
-    '''
-    if not os.path.exists('schema.sql'):
-        with open('schema.sql', 'w') as f:
-            f.write(schema_content)
-
-# Initialize database when app starts
 def initialize_database():
-    create_schema_file()
     if not os.path.exists(app.config['DATABASE']):
+        print("🔄 Creating new database...")
         init_db()
-        print("✅ Database initialized successfully.")
     else:
-        # Verify table exists
+        print("🔍 Database exists, checking schema...")
         db = get_db()
         try:
+            # Check if all tables exist
             db.execute("SELECT 1 FROM users LIMIT 1")
-        except sqlite3.OperationalError:
-            init_db()  # Recreate tables if they don't exist
-            print("✅ Recreated missing database tables.")
+            db.execute("SELECT 1 FROM announcements LIMIT 1")
+            print("✅ Database schema is valid.")
+        except sqlite3.OperationalError as e:
+            if "no such table" in str(e):
+                print("⚠️ Missing tables detected. Recreating database...")
+                init_db()
+            else:
+                print(f"❌ Database error: {e}")
         finally:
             db.close()
 
-# Run initialization
-initialize_database()        
+initialize_database()
 
-# Login required decorator
+# Decorators
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
             flash('Please log in to access this page.', 'danger')
-            return redirect(url_for('login'))
+            return redirect(url_for('login', next=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Please log in to access this page.', 'danger')
+            return redirect(url_for('login', next=request.url))
+        if session.get('role') != 'admin':
+            flash('You do not have permission to access this page.', 'danger')
+            return redirect(url_for('dashboard'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def hr_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Please log in to access this page.', 'danger')
+            return redirect(url_for('login', next=request.url))
+        if session.get('role') not in ['admin', 'hr']:
+            flash('You do not have permission to access this page.', 'danger')
+            return redirect(url_for('dashboard'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -85,8 +139,10 @@ def register():
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
         confirm_password = request.form.get('confirm_password', '')
+        full_name = request.form.get('full_name', '').strip()
+        department = request.form.get('department', '').strip()
+        position = request.form.get('position', '').strip()
 
-        # Validate form data
         errors = []
         
         if not username:
@@ -111,9 +167,11 @@ def register():
                 flash(error, 'danger')
             return render_template('register.html', 
                                  username=username, 
-                                 email=email)
+                                 email=email,
+                                 full_name=full_name,
+                                 department=department,
+                                 position=position)
 
-        # Check if user exists
         with get_db() as db:
             existing_user = db.execute(
                 'SELECT id FROM users WHERE username = ? OR email = ?',
@@ -124,13 +182,15 @@ def register():
                 flash('Username or email already exists', 'danger')
                 return render_template('register.html', 
                                      username=username, 
-                                     email=email)
+                                     email=email,
+                                     full_name=full_name,
+                                     department=department,
+                                     position=position)
 
-            # Create new user
             try:
                 db.execute(
-                    'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
-                    (username, email, generate_password_hash(password))
+                    'INSERT INTO users (username, email, password_hash, full_name, department, position) VALUES (?, ?, ?, ?, ?, ?)',
+                    (username, email, generate_password_hash(password), full_name, department, position)
                 )
                 db.commit()
                 flash('Registration successful! Please log in.', 'success')
@@ -156,9 +216,18 @@ def login():
         if user and check_password_hash(user['password_hash'], password):
             session['user_id'] = user['id']
             session['username'] = user['username']
-            flash(f'Welcome back, {user["username"]}!', 'success')
-            next_page = request.args.get('next') or url_for('dashboard')
-            return redirect(next_page)
+            session['role'] = user['role']
+            session['full_name'] = user['full_name']
+            
+            flash(f'Welcome back, {user["full_name"] or user["username"]}!', 'success')
+            
+            # Redirect to appropriate dashboard based on role
+            if user['role'] == 'admin':
+                return redirect(url_for('admin_dashboard'))
+            elif user['role'] == 'hr':
+                return redirect(url_for('hr_dashboard'))
+            else:
+                return redirect(url_for('dashboard'))
         else:
             flash('Invalid username or password', 'danger')
 
@@ -170,10 +239,61 @@ def logout():
     flash('You have been logged out.', 'info')
     return redirect(url_for('home'))
 
+# User Dashboard
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template('dashboard.html', username=session['username'])
+    with get_db() as db:
+        announcements = db.execute(
+            'SELECT a.*, u.full_name as author_name FROM announcements a JOIN users u ON a.author_id = u.id ORDER BY a.created_at DESC LIMIT 5'
+        ).fetchall()
+    
+    return render_template('dashboard.html', announcements=announcements)
+
+# Admin Section
+@app.route('/admin/dashboard')
+@admin_required
+def admin_dashboard():
+    with get_db() as db:
+        user_count = db.execute('SELECT COUNT(*) FROM users').fetchone()[0]
+        recent_users = db.execute('SELECT * FROM users ORDER BY created_at DESC LIMIT 5').fetchall()
+        announcements = db.execute(
+            'SELECT a.*, u.full_name as author_name FROM announcements a JOIN users u ON a.author_id = u.id ORDER BY a.created_at DESC LIMIT 5'
+        ).fetchall()
+    
+    return render_template('admin/dashboard.html', 
+                         user_count=user_count,
+                         recent_users=recent_users,
+                         announcements=announcements)
+
+@app.route('/admin/users')
+@admin_required
+def admin_users():
+    with get_db() as db:
+        users = db.execute('SELECT * FROM users ORDER BY created_at DESC').fetchall()
+    return render_template('admin/users.html', users=users)
+
+# HR Section
+@app.route('/hr/dashboard')
+@hr_required
+def hr_dashboard():
+    with get_db() as db:
+        announcements = db.execute(
+            'SELECT a.*, u.full_name as author_name FROM announcements a JOIN users u ON a.author_id = u.id ORDER BY a.created_at DESC LIMIT 5'
+        ).fetchall()
+        employees = db.execute(
+            'SELECT id, full_name, department, position FROM users WHERE role = "user" ORDER BY full_name'
+        ).fetchall()
+    
+    return render_template('hr/dashboard.html', 
+                         announcements=announcements,
+                         employees=employees)
 
 if __name__ == '__main__':
+    # Create required directories if they don't exist
+    os.makedirs('static/css', exist_ok=True)
+    os.makedirs('templates/admin', exist_ok=True)
+    os.makedirs('templates/hr', exist_ok=True)
+    
+    # Run the app
     app.run(debug=True)
