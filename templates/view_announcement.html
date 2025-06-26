@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Announcement - {{ announcement.title }}{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="card mb-4">
+        <div class="card-header bg-orange text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">{{ announcement.title }}</h4>
+            <span class="small">{{ announcement.created_at[:10] }} by {{ announcement.author_name }}</span>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">{{ announcement.content|safe }}</div>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-sm">Back to Dashboard</a>
+        </div>
+    </div>
+    <div class="card mb-4">
+        <div class="card-header bg-green text-white">
+            <h5 class="mb-0">Comments</h5>
+        </div>
+        <div class="card-body">
+            {% if comments %}
+                <ul class="list-group mb-4">
+                    {% for comment in comments %}
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><strong>{{ comment.full_name or comment.username }}</strong> <span class="text-muted small">{{ comment.created_at[:16] }}</span></span>
+                            {% if session.get('role') == 'admin' %}
+                            <form method="POST" action="{{ url_for('delete_comment', comment_id=comment.id) }}" style="display:inline;">
+                                <button type="submit" class="btn btn-danger btn-sm ms-2" onclick="return confirm('Delete this comment?')">Delete</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                        <div>{{ comment.content }}</div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">No comments yet. Be the first to comment!</p>
+            {% endif %}
+            <form method="POST" action="{{ url_for('add_comment', announcement_id=announcement.id) }}">
+                <div class="mb-3">
+                    <label for="commentContent" class="form-label">Add a Comment</label>
+                    <textarea class="form-control" id="commentContent" name="content" rows="3" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-orange">Post Comment</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 
