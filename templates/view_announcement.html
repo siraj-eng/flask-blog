@@ -3,18 +3,24 @@
 {% block title %}Announcement - {{ announcement.title }}{% endblock %}
 
 {% block content %}
-<div class="container my-4">
-    <div class="card mb-4">
+<div class="container my-4" style="margin-top: 2rem;">
+    <div class="card mb-4 shadow-sm">
         <div class="card-header bg-orange text-white d-flex justify-content-between align-items-center">
-            <h4 class="mb-0">{{ announcement.title }}</h4>
-            <span class="small">{{ announcement.created_at[:10] }} by {{ announcement.author_name }}</span>
+            <div>
+                <h4 class="mb-0 d-inline">{{ announcement.title }}</h4>
+                {% if session.get('user_id') == announcement.author_id %}
+                  <span class="badge bg-green ms-2">You</span>
+                {% endif %}
+                <span class="text-muted ms-2">by {{ announcement.author_name }}</span>
+            </div>
+            <span class="small">{{ announcement.created_at[:10] }}</span>
         </div>
         <div class="card-body">
             <div class="mb-3">{{ announcement.content|safe }}</div>
-            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-sm">Back to Dashboard</a>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-orange btn-sm"><i class="fas fa-arrow-left me-1"></i>Back to Dashboard</a>
         </div>
     </div>
-    <div class="card mb-4">
+    <div class="card mb-4 shadow-sm">
         <div class="card-header bg-green text-white">
             <h5 class="mb-0">Comments</h5>
         </div>
@@ -23,27 +29,33 @@
                 <ul class="list-group mb-4">
                     {% for comment in comments %}
                     <li class="list-group-item">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span><strong>{{ comment.full_name or comment.username }}</strong> <span class="text-muted small">{{ comment.created_at[:16] }}</span></span>
+                        <div class="d-flex align-items-center mb-1">
+                            <div class="avatar rounded-circle bg-orange text-white d-flex align-items-center justify-content-center me-2" style="width:36px;height:36px;font-weight:bold;">
+                                {{ (comment.full_name or comment.username)[0]|upper }}
+                            </div>
+                            <div class="flex-grow-1">
+                                <strong>{{ comment.full_name or comment.username }}</strong>
+                                <span class="text-muted small ms-2">{{ comment.created_at[:16] }}</span>
+                            </div>
                             {% if session.get('role') == 'admin' %}
                             <form method="POST" action="{{ url_for('delete_comment', comment_id=comment.id) }}" style="display:inline;">
-                                <button type="submit" class="btn btn-danger btn-sm ms-2" onclick="return confirm('Delete this comment?')">Delete</button>
+                                <button type="submit" class="btn btn-danger btn-sm ms-2" onclick="return confirm('Delete this comment?')"><i class="fas fa-trash"></i></button>
                             </form>
                             {% endif %}
                         </div>
-                        <div>{{ comment.content }}</div>
+                        <div class="ps-5">{{ comment.content }}</div>
                     </li>
                     {% endfor %}
                 </ul>
             {% else %}
                 <p class="text-muted">No comments yet. Be the first to comment!</p>
             {% endif %}
-            <form method="POST" action="{{ url_for('add_comment', announcement_id=announcement.id) }}">
-                <div class="mb-3">
-                    <label for="commentContent" class="form-label">Add a Comment</label>
-                    <textarea class="form-control" id="commentContent" name="content" rows="3" required></textarea>
+            <form method="POST" action="{{ url_for('add_comment', announcement_id=announcement.id) }}" class="mt-4">
+                <div class="form-floating mb-3">
+                    <textarea class="form-control rounded-3" id="commentContent" name="content" placeholder="Add a comment..." rows="3" required style="min-height:80px;"></textarea>
+                    <label for="commentContent">Add a Comment</label>
                 </div>
-                <button type="submit" class="btn btn-orange">Post Comment</button>
+                <button type="submit" class="btn btn-green"><i class="fas fa-paper-plane me-1"></i>Post Comment</button>
             </form>
         </div>
     </div>

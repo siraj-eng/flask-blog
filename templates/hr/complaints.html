@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Complaints - SoftNet Internal{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-4">Complaints Management</h2>
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <form method="get" class="mb-3 row g-2 align-items-center">
+        <div class="col-md-3">
+          <select class="form-select" name="status">
+            <option value="">All Statuses</option>
+            <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+            <option value="resolved" {% if status == 'resolved' %}selected{% endif %}>Resolved</option>
+            <option value="dismissed" {% if status == 'dismissed' %}selected{% endif %}>Dismissed</option>
+          </select>
+        </div>
+        <div class="col-md-5">
+          <input type="text" class="form-control" name="q" placeholder="Search by title, user, department..." value="{{ q }}">
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-green w-100"><i class="fas fa-search me-1"></i>Search</button>
+        </div>
+      </form>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Title</th>
+              <th>User</th>
+              <th>Department</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in complaints %}
+            <tr>
+              <td>{{ c.title }}</td>
+              <td>{{ c.full_name or c.username }}</td>
+              <td>{{ c.department or '-' }}</td>
+              <td><span class="badge {% if c.status == 'pending' %}bg-warning text-dark{% elif c.status == 'resolved' %}bg-success{% else %}bg-secondary{% endif %}">{{ c.status|capitalize }}</span></td>
+              <td>{{ c.created_at[:10] }}</td>
+              <td><a href="{{ url_for('hr_complaint_detail', complaint_id=c.id) }}" class="btn btn-sm btn-outline-primary">View</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if not complaints %}
+        <p class="text-muted mt-3">No complaints found.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %} 

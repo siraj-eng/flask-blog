@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Lunch Orders - SoftNet Internal{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="mb-3 d-flex justify-content-between align-items-center">
+    <a href="{{ url_for('hr_dashboard') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>Back to Dashboard</a>
+    <a href="{{ url_for('hr_download_lunch_orders') }}" class="btn btn-green"><i class="fas fa-download me-1"></i>Download CSV</a>
+  </div>
+  <div class="card shadow-sm">
+    <div class="card-header bg-orange text-white">
+      <h4 class="mb-0">Today's Lunch Orders ({{ today }})</h4>
+    </div>
+    <div class="card-body">
+      {% if orders %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Employee</th>
+              <th>Dish</th>
+              <th>Notes</th>
+              <th>Status</th>
+              <th>Time</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in orders %}
+            <tr>
+              <td>{{ order.full_name or order.username }}</td>
+              <td>{{ order.dish }}</td>
+              <td>{{ order.notes or '-' }}</td>
+              <td><span class="badge bg-{{ 'warning text-dark' if order.status == 'pending' else 'success' if order.status == 'completed' else 'info text-dark' if order.status == 'received' else 'secondary' }}">{{ order.status.title() }}</span></td>
+              <td>{{ order.created_at[11:16] }}</td>
+              <td>
+                <form method="POST" action="{{ url_for('hr_lunch_orders') }}" class="d-inline">
+                  <input type="hidden" name="order_id" value="{{ order.id }}">
+                  <select name="status" class="form-select form-select-sm d-inline w-auto" onchange="this.form.submit()">
+                    <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="received" {% if order.status == 'received' %}selected{% endif %}>Received</option>
+                    <option value="completed" {% if order.status == 'completed' %}selected{% endif %}>Completed</option>
+                  </select>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+        <p class="text-muted">No lunch orders for today yet.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %} 

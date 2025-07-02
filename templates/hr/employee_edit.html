@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Edit Employee - SoftNet Internal{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-orange text-white">
+          <h4 class="mb-0">Edit Employee</h4>
+        </div>
+        <form method="POST" action="">
+          <div class="card-body">
+            <div class="mb-3">
+              <label for="full_name" class="form-label">Full Name</label>
+              <input type="text" class="form-control" id="full_name" name="full_name" value="{{ employee.full_name }}" required>
+            </div>
+            <div class="mb-3">
+              <label for="email" class="form-label">Email</label>
+              <input type="email" class="form-control" id="email" name="email" value="{{ employee.email }}" required>
+            </div>
+            <div class="mb-3">
+              <label for="department" class="form-label">Department</label>
+              <input type="text" class="form-control" id="department" name="department" value="{{ employee.department }}">
+            </div>
+            <div class="mb-3">
+              <label for="position" class="form-label">Position</label>
+              <input type="text" class="form-control" id="position" name="position" value="{{ employee.position }}">
+            </div>
+            <div class="mb-3">
+              <label for="role" class="form-label">Role</label>
+              <select class="form-select" id="role" name="role">
+                <option value="user" {% if employee.role == 'user' %}selected{% endif %}>User</option>
+                <option value="hr" {% if employee.role == 'hr' %}selected{% endif %}>HR</option>
+                <option value="admin" {% if employee.role == 'admin' %}selected{% endif %}>Admin</option>
+              </select>
+            </div>
+          </div>
+          <div class="card-footer text-end">
+            <button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i>Save Changes</button>
+            <a href="{{ url_for('hr_employee_detail', user_id=employee.id) }}" class="btn btn-secondary ms-2"><i class="fas fa-arrow-left me-1"></i>Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 

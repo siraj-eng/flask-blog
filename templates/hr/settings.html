@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}HR Settings - SoftNet Internal{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="mb-3">
+    <a href="{{ url_for('hr_dashboard') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>Back to Dashboard</a>
+  </div>
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-orange text-white">
+          <h4 class="mb-0">HR Profile & Settings</h4>
+        </div>
+        <div class="card-body">
+          <form method="POST">
+            <h5 class="mb-3">Profile Information</h5>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Full Name</label>
+                <input type="text" class="form-control" name="full_name" value="{{ user.full_name }}" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control" name="email" value="{{ user.email }}" required>
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Department</label>
+                <input type="text" class="form-control" name="department" value="{{ user.department }}">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Position</label>
+                <input type="text" class="form-control" name="position" value="{{ user.position }}">
+              </div>
+            </div>
+            <hr>
+            <h5 class="mb-3">Change Password</h5>
+            <div class="row mb-3">
+              <div class="col-md-4">
+                <label class="form-label">Old Password</label>
+                <input type="password" class="form-control" name="old_password">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">New Password</label>
+                <input type="password" class="form-control" name="new_password">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Confirm New Password</label>
+                <input type="password" class="form-control" name="confirm_password">
+              </div>
+            </div>
+            <hr>
+            <h5 class="mb-3">Notification Preferences</h5>
+            <div class="form-check form-switch mb-2">
+              <input class="form-check-input" type="checkbox" id="notifyComplaints" name="notify_complaints" {% if user.notify_complaints %}checked{% endif %}>
+              <label class="form-check-label" for="notifyComplaints">Notify me about new complaints</label>
+            </div>
+            <div class="form-check form-switch mb-2">
+              <input class="form-check-input" type="checkbox" id="notifyComments" name="notify_comments" {% if user.notify_comments %}checked{% endif %}>
+              <label class="form-check-label" for="notifyComments">Notify me about new comments</label>
+            </div>
+            <div class="form-check form-switch mb-2">
+              <input class="form-check-input" type="checkbox" id="notifyNewUsers" name="notify_new_users" {% if user.notify_new_users %}checked{% endif %}>
+              <label class="form-check-label" for="notifyNewUsers">Notify me about new users</label>
+            </div>
+            <hr>
+            <h5 class="mb-3">Theme</h5>
+            <div class="mb-3">
+              <select class="form-select w-auto d-inline" name="theme">
+                <option value="dark" {% if user.theme == 'dark' %}selected{% endif %}>Dark</option>
+                <option value="light" {% if user.theme == 'light' %}selected{% endif %}>Light</option>
+              </select>
+              <span class="ms-2 text-muted">(Choose your preferred display mode)</span>
+            </div>
+            <button type="submit" class="btn btn-green mt-2">Save Changes</button>
+          </form>
+        </div>
+      </div>
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-green text-white">
+          <h5 class="mb-0">Account Security</h5>
+        </div>
+        <div class="card-body">
+          <h6>Login History</h6>
+          <ul class="list-group mb-3">
+            {% for entry in login_history %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <span><i class="fas fa-clock me-2"></i>{{ entry.time }}</span>
+              <span class="text-muted small">IP: {{ entry.ip }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+          <p class="text-muted">Two-factor authentication coming soon.</p>
+        </div>
+      </div>
+      <div class="card shadow-sm">
+        <div class="card-header bg-orange text-white">
+          <h5 class="mb-0">Support</h5>
+        </div>
+        <div class="card-body">
+          <p>Need help? <a href="mailto:support@softnet-internal.com" class="text-orange">Contact IT/Support</a> or <a href="#" class="text-orange">view documentation</a>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Repair Details - SoftNet Internal{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-orange text-white">
+          <h4 class="mb-0">Repair Details</h4>
+        </div>
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-sm-4">Title</dt>
+            <dd class="col-sm-8">{{ repair.title }}</dd>
+            <dt class="col-sm-4">Description</dt>
+            <dd class="col-sm-8">{{ repair.description }}</dd>
+            <dt class="col-sm-4">User</dt>
+            <dd class="col-sm-8">{{ repair.full_name or repair.username }}</dd>
+            <dt class="col-sm-4">Department</dt>
+            <dd class="col-sm-8">{{ repair.department or '-' }}</dd>
+            <dt class="col-sm-4">Status</dt>
+            <dd class="col-sm-8">
+              <form method="POST" class="d-inline">
+                <select name="status" class="form-select d-inline w-auto">
+                  <option value="pending" {% if repair.status == 'pending' %}selected{% endif %}>Pending</option>
+                  <option value="in progress" {% if repair.status == 'in progress' %}selected{% endif %}>In Progress</option>
+                  <option value="resolved" {% if repair.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                  <option value="dismissed" {% if repair.status == 'dismissed' %}selected{% endif %}>Dismissed</option>
+                </select>
+                <button type="submit" class="btn btn-success btn-sm ms-2">Update</button>
+              </form>
+            </dd>
+            <dt class="col-sm-4">Date Submitted</dt>
+            <dd class="col-sm-8">{{ repair.created_at[:16] }}</dd>
+          </dl>
+        </div>
+        <div class="card-footer text-end">
+          <a href="{{ url_for('hr_repairs') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>Back to Repairs</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 

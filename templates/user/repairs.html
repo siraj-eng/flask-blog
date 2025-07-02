@@ -1,0 +1,494 @@
+{% extends 'base.html' %}
+{% block title %}My Repairs - SoftNet Internal{% endblock %}
+{% block content %}
+<style>
+    .dashboard-container {
+        display: flex;
+        min-height: 100vh;
+        position: relative;
+    }
+
+    .sidebar {
+        width: 280px;
+        background: linear-gradient(180deg, var(--secondary-dark) 0%, var(--primary-dark) 100%);
+        padding: 2rem 0;
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+        border-right: 1px solid var(--border-color);
+        z-index: 1000;
+    }
+
+    .sidebar h5 {
+        color: var(--primary-green);
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 2rem;
+        font-size: 1.25rem;
+    }
+
+    .sidebar-menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .sidebar-menu li {
+        margin-bottom: 0.5rem;
+    }
+
+    .sidebar-menu a {
+        display: flex;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        color: var(--text-muted);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border-left: 3px solid transparent;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .sidebar-menu a::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 0;
+        background: linear-gradient(90deg, var(--primary-green), var(--light-green));
+        transition: width 0.3s ease;
+        opacity: 0.1;
+    }
+
+    .sidebar-menu a:hover::before,
+    .sidebar-menu a.active::before {
+        width: 100%;
+    }
+
+    .sidebar-menu a:hover,
+    .sidebar-menu a.active {
+        color: var(--primary-green);
+        border-left-color: var(--primary-green);
+        transform: translateX(5px);
+    }
+
+    .sidebar-menu a i {
+        margin-right: 0.75rem;
+        font-size: 1.1rem;
+        width: 20px;
+        text-align: center;
+    }
+
+    .main-content {
+        flex: 1;
+        margin-left: 280px;
+        padding: 2rem;
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--secondary-dark) 100%);
+        min-height: 100vh;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05));
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--primary-green), var(--light-green));
+    }
+
+    .page-header h2 {
+        color: var(--text-light);
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        font-size: 2rem;
+    }
+
+    .page-header .subtitle {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+    }
+
+    .repair-form-card {
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .repair-form-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--primary-green), var(--light-green));
+    }
+
+    .repair-form-card h5 {
+        color: var(--primary-green);
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .repair-list-card {
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .repair-list-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--dark-green), var(--primary-green));
+    }
+
+    .repair-list-header {
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid var(--border-color);
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.05), rgba(34, 197, 94, 0.02));
+    }
+
+    .repair-list-header h5 {
+        color: var(--primary-green);
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .repair-list-body {
+        padding: 2rem;
+    }
+
+    .repair-item {
+        background: rgba(51, 65, 85, 0.3);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .repair-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 4px;
+        background: linear-gradient(180deg, var(--primary-green), var(--dark-green));
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .repair-item:hover {
+        transform: translateX(5px);
+        border-color: var(--primary-green);
+        background: rgba(34, 197, 94, 0.05);
+    }
+
+    .repair-item:hover::before {
+        opacity: 1;
+    }
+
+    .repair-title {
+        color: var(--text-light);
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .repair-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .repair-date {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-pending {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+    }
+
+    .status-in-progress {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+    }
+
+    .status-completed {
+        background: linear-gradient(135deg, var(--primary-green), var(--dark-green));
+        color: white;
+    }
+
+    .repair-description {
+        color: var(--text-muted);
+        line-height: 1.6;
+        margin-top: 1rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--text-muted);
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: var(--primary-green);
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .form-floating {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-floating input,
+    .form-floating textarea {
+        background: rgba(51, 65, 85, 0.5);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        color: var(--text-light);
+        padding: 1rem;
+        width: 100%;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-floating input:focus,
+    .form-floating textarea:focus {
+        outline: none;
+        border-color: var(--primary-green);
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+        background: rgba(51, 65, 85, 0.7);
+    }
+
+    .form-floating label {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        color: var(--text-muted);
+        transition: all 0.3s ease;
+        pointer-events: none;
+        background: transparent;
+    }
+
+    .form-floating input:focus + label,
+    .form-floating input:not(:placeholder-shown) + label,
+    .form-floating textarea:focus + label,
+    .form-floating textarea:not(:placeholder-shown) + label {
+        top: -0.5rem;
+        left: 0.75rem;
+        font-size: 0.875rem;
+        color: var(--primary-green);
+        background: var(--primary-dark);
+        padding: 0 0.5rem;
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, var(--primary-green), var(--dark-green));
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-submit::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(34, 197, 94, 0.3);
+    }
+
+    .btn-submit:hover::before {
+        left: 100%;
+    }
+
+    @media (max-width: 768px) {
+        .sidebar {
+            width: 100%;
+            left: -100%;
+            transition: left 0.3s ease;
+        }
+        
+        .sidebar.active {
+            left: 0;
+        }
+        
+        .main-content {
+            margin-left: 0;
+            padding: 1rem;
+        }
+        
+        .page-header {
+            padding: 1.5rem;
+        }
+        
+        .page-header h2 {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+
+<div class="dashboard-container">
+    <div class="sidebar">
+        <h5 class="mb-4"><i class="fas fa-tools me-2"></i>SoftNet Internal</h5>
+        <ul class="sidebar-menu">
+            <li><a href="{{ url_for('dashboard') }}"><i class="fas fa-tachometer-alt"></i>Dashboard</a></li>
+            <li><a href="{{ url_for('user_complaints') }}"><i class="fas fa-exclamation-circle"></i>Complaints</a></li>
+            <li><a href="{{ url_for('user_repairs') }}" class="active"><i class="fas fa-tools"></i>Repairs</a></li>
+            <li><a href="{{ url_for('user_events') }}"><i class="fas fa-calendar"></i>Events</a></li>
+            <li><a href="{{ url_for('chat') }}"><i class="fas fa-comments"></i>Chat</a></li>
+            <li><a href="{{ url_for('user_settings') }}"><i class="fas fa-cog"></i>Settings</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="page-header">
+            <h2><i class="fas fa-tools me-3"></i>My Repairs</h2>
+            <p class="subtitle">Submit and track your repair requests</p>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="repair-form-card">
+                    <h5><i class="fas fa-plus-circle"></i>Submit a Repair Request</h5>
+                    <form method="POST" action="{{ url_for('user_repairs') }}">
+                        <div class="mb-3">
+                          <label for="title" class="form-label">Repair Title</label>
+                          <input type="text" class="form-control" id="title" name="title" required maxlength="100" style="margin-top: 0.5rem;">
+                        </div>
+                        <div class="mb-3">
+                          <label for="description" class="form-label">Description</label>
+                          <textarea class="form-control" id="description" name="description" rows="4" required style="margin-top: 0.5rem;"></textarea>
+                        </div>
+                        <button type="submit" class="btn-submit">
+                            <i class="fas fa-paper-plane"></i>Submit Request
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="repair-list-card">
+                    <div class="repair-list-header">
+                        <h5><i class="fas fa-list"></i>Your Repair Requests</h5>
+                    </div>
+                    <div class="repair-list-body">
+                        {% if repairs %}
+                            {% for r in repairs %}
+                            <div class="repair-item">
+                                <div class="repair-meta">
+                                    <div class="repair-date">
+                                        <i class="fas fa-clock"></i>
+                                        {{ r.created_at }}
+                                    </div>
+                                    <span class="status-badge status-{{ r.status.lower().replace(' ', '-') }}">
+                                        {{ r.status|capitalize }}
+                                    </span>
+                                </div>
+                                <div class="repair-title">{{ r.title }}</div>
+                                <div class="repair-description">{{ r.description }}</div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state">
+                                <i class="fas fa-wrench"></i>
+                                <h5>No Repair Requests</h5>
+                                <p>You haven't submitted any repair requests yet.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Add form validation and submit animation
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        const submitBtn = document.querySelector('.btn-submit');
+        
+        form.addEventListener('submit', function(e) {
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>Submitting...';
+            submitBtn.disabled = true;
+        });
+        
+        // Auto-resize textarea
+        const textarea = document.getElementById('description');
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    });
+</script>
+{% endblock %}

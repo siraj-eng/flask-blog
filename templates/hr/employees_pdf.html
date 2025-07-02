@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Employees - SoftNet Internal</title>
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 12px; margin: 2em; }
+    h2 { color: #1e7e34; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1em; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #f8f9fa; }
+    tr:nth-child(even) { background: #f2f2f2; }
+  </style>
+</head>
+<body>
+  <h2>Employees - SoftNet Internal</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Department</th>
+        <th>Position</th>
+        <th>Email</th>
+        <th>Date Joined</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for emp in employees %}
+      <tr>
+        <td>{{ emp.full_name or emp.username }}</td>
+        <td>{{ emp.department or '-' }}</td>
+        <td>{{ emp.position or '-' }}</td>
+        <td>{{ emp.email }}</td>
+        <td>{{ emp.created_at[:10] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html> 

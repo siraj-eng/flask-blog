@@ -3,166 +3,380 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}HR Management System{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>{% block title %}Modern HR System{% endblock %}</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Poppins', Arial, sans-serif; background: #f8fafc; }
-        .navbar { position: sticky; top: 0; z-index: 1030; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-        .card { border-radius: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-        .btn-orange { background: #FFA500; color: #fff; border-radius: 0.5rem; font-weight: 600; }
-        .btn-orange:hover { background: #e69500; color: #fff; }
-        .btn-green { background: #4CAF50; color: #fff; border-radius: 0.5rem; font-weight: 600; }
-        .btn-green:hover { background: #388e3c; color: #fff; }
-        .bg-orange { background: #FFA500 !important; }
-        .bg-green { background: #4CAF50 !important; }
-        .text-orange { color: #FFA500 !important; }
-        .text-green { color: #4CAF50 !important; }
-        .sidebar-menu a.active, .sidebar-menu a:hover { background: #FFA500; color: #fff !important; border-radius: 0.5rem; }
-        .sidebar-menu a { font-weight: 500; }
-        .form-control:focus { border-color: #FFA500; box-shadow: 0 0 0 0.2rem rgba(255,165,0,.15); }
-        .dropdown-menu { border-radius: 0.75rem; }
-        .badge.bg-orange { background: #FFA500 !important; }
-        .badge.bg-green { background: #4CAF50 !important; }
-        .list-group-item { border-radius: 0.5rem; margin-bottom: 0.5rem; }
-        .alert { border-radius: 0.75rem; }
-        .footer { background: #fff; border-top: 1px solid #eee; padding: 2rem 0; color: #888; font-size: 1rem; }
+        :root {
+            --primary-green: #22c55e;
+            --dark-green: #16a34a;
+            --light-green: #4ade80;
+            --primary-dark: #0f172a;
+            --secondary-dark: #1e293b;
+            --tertiary-dark: #334155;
+            --text-light: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border-color: rgba(34, 197, 94, 0.2);
+            --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--secondary-dark) 100%);
+            color: var(--text-light);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--primary-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-green);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--dark-green);
+        }
+
+        /* Loading Animation */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-overlay.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid var(--tertiary-dark);
+            border-top: 4px solid var(--primary-green);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Notification Toast */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+        }
+
+        .toast {
+            background: linear-gradient(135deg, var(--primary-green), var(--dark-green));
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            transform: translateX(400px);
+            animation: slideIn 0.5s ease forwards;
+            box-shadow: var(--shadow);
+        }
+
+        @keyframes slideIn {
+            to { transform: translateX(0); }
+        }
+
+        /* Button Styles */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-green), var(--dark-green));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(34, 197, 94, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--tertiary-dark), var(--secondary-dark));
+            color: var(--text-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary-green);
+        }
+
+        /* Card Styles */
+        .card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.8));
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary-green), var(--light-green));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow);
+            border-color: var(--primary-green);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card-body {
+            padding: 2rem;
+        }
+
+        .card-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05));
+        }
+
+        /* Form Styles */
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(51, 65, 85, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-light);
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+            transform: scale(1.02);
+        }
+
+        .form-control::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-light);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        /* Utility Classes */
+        .text-center { text-align: center; }
+        .text-muted { color: var(--text-muted); }
+        .mb-3 { margin-bottom: 1rem; }
+        .mb-4 { margin-bottom: 1.5rem; }
+        .mt-3 { margin-top: 1rem; }
+        .d-flex { display: flex; }
+        .justify-content-between { justify-content: space-between; }
+        .align-items-center { align-items: center; }
+        .gap-3 { gap: 1rem; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                position: fixed;
+                left: -100%;
+                z-index: 1000;
+                transition: left 0.3s ease;
+            }
+            
+            .sidebar.active {
+                left: 0;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+        }
     </style>
-    {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Navbar/Header with Logo -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="/" style="font-family: 'Poppins', sans-serif; font-size: 2rem; letter-spacing: 2px;">
-                <span style="color: #FFA500;">Soft</span><span style="color: #4CAF50;">net</span> <span style="color: #FFA500;">Internal</span>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('home') }}">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('about') }}">About</a>
-                    </li>
-                    {% if 'user_id' in session %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
-                        </li>
-                    {% endif %}
-                </ul>
-                <ul class="navbar-nav">
-                    {% if 'user_id' in session %}
-                        {% if session.get('role') == 'admin' %}
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
-                                    <i class="fas fa-crown me-1 text-orange"></i>Admin
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a></li>
-                                    <li><a class="dropdown-item" href="{{ url_for('admin_users') }}">Manage Users</a></li>
-                                </ul>
-                            </li>
-                        {% elif session.get('role') == 'hr' %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('hr_dashboard') }}">
-                                    <i class="fas fa-user-tie me-1 text-orange"></i>HR Dashboard
-                                </a>
-                            </li>
-                        {% endif %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user-circle me-1"></i>
-                                {{ session.get('full_name', session.get('username')) }}
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="{{ url_for('dashboard') }}">My Dashboard</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
-                            </ul>
-                        </li>
-                        <div class="dropdown ms-auto">
-                            <a class="nav-link position-relative" href="#" id="notificationsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-bell"></i>
-                                {% if g.notifications and g.notifications|length > 0 %}
-                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-orange">{{ g.notifications|length }}</span>
-                                {% endif %}
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationsDropdown" style="min-width: 300px;">
-                                {% if g.notifications and g.notifications|length > 0 %}
-                                    {% for n in g.notifications %}
-                                    <li>
-                                        <a class="dropdown-item small" href="{{ url_for('read_notification', notification_id=n.id) }}">{{ n.message }}<br><span class="text-muted small">{{ n.created_at[:16] }}</span></a>
-                                    </li>
-                                    {% endfor %}
-                                {% else %}
-                                    <li><span class="dropdown-item text-muted small">No new notifications</span></li>
-                                {% endif %}
-                            </ul>
-                        </div>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('login') }}">Login</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="btn btn-orange ms-2" href="{{ url_for('register') }}">Register</a>
-                        </li>
-                    {% endif %}
-                </ul>
-                <!-- Add nav links here if needed -->
-                <form class="d-flex ms-3" method="GET" action="{{ url_for('search') }}" style="max-width: 300px;">
-                    <input class="form-control me-2" type="search" name="q" placeholder="Search..." aria-label="Search" required>
-                    <button class="btn btn-orange" type="submit">Search</button>
-                </form>
-            </div>
-        </div>
-    </nav>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
 
-    <!-- Main Content -->
-    <main class="container-fluid my-4 px-3 px-md-5">
-        <!-- Flash Messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show">
-                        {% if category == 'success' %}
-                            <i class="fas fa-check-circle me-2"></i>
-                        {% elif category == 'danger' %}
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                        {% elif category == 'warning' %}
-                            <i class="fas fa-exclamation-circle me-2"></i>
-                        {% else %}
-                            <i class="fas fa-info-circle me-2"></i>
-                        {% endif %}
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
 
-        {% block content %}{% endblock %}
-    </main>
+    <!-- Notification Bell -->
+    {% if g.notifications %}
+    <div style="position:fixed;top:24px;right:32px;z-index:1050;">
+      <div class="dropdown">
+        <button class="btn btn-secondary dropdown-toggle position-relative" type="button" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="fas fa-bell"></i>
+          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ g.notifications|length }}</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="notifDropdown" style="min-width:320px;">
+          <li>
+            <form method="POST" action="{{ url_for('mark_all_notifications_read') }}" style="display:inline;">
+              <button type="submit" class="dropdown-item text-success"><i class="fas fa-check-double me-2"></i>Mark all as read</button>
+            </form>
+          </li>
+          <li><a class="dropdown-item text-primary" href="{{ url_for('all_notifications') }}"><i class="fas fa-list me-2"></i>View all notifications</a></li>
+          <li><hr class="dropdown-divider"></li>
+          {% for notif in g.notifications %}
+            <li>
+              <a class="dropdown-item small" href="{{ url_for('read_notification', notification_id=notif.id) }}">
+                <i class="fas fa-bell text-orange me-2"></i>{{ notif.message }}<br>
+                <span class="text-muted" style="font-size:0.85em;">{{ notif.created_at[:16] }}</span>
+              </a>
+            </li>
+          {% else %}
+            <li><span class="dropdown-item text-muted">No new notifications</span></li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    {% endif %}
 
-    <!-- Footer -->
-    <footer class="footer mt-5">
-        <div class="container text-center">
-            <div class="row justify-content-center">
-                <div class="col-md-6">
-                    <h5 class="text-orange mb-2">Softnet Internal</h5>
-                    <p class="mb-1">Modern HR Management & Engagement Platform</p>
-                    <p class="mb-0 small">&copy; 2023 Softnet Internal. All rights reserved.</p>
-                </div>
-            </div>
-        </div>
-    </footer>
+    {% block content %}{% endblock %}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    {% block extra_js %}{% endblock %}
+    <script>
+        // Hide loading overlay when page loads
+        window.addEventListener('load', function() {
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.classList.add('fade-out');
+            setTimeout(() => overlay.style.display = 'none', 500);
+        });
+
+        // Toast notification function
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            
+            if (type === 'error') {
+                toast.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+            }
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.5s ease reverse';
+                setTimeout(() => container.removeChild(toast), 500);
+            }, 3000);
+        }
+
+        // Add smooth scrolling
+        document.addEventListener('DOMContentLoaded', function() {
+            const links = document.querySelectorAll('a[href^="#"]');
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+        });
+
+        // Add intersection observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const animatedElements = document.querySelectorAll('.card, .widget');
+            animatedElements.forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(20px)';
+                el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(el);
+            });
+        });
+    </script>
 </body>
 </html>

@@ -1,122 +1,68 @@
 {% extends "base.html" %}
 
-{% block title %}HR Dashboard - HR System{% endblock %}
+{% block title %}HR Dashboard - SoftNet Internal{% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
-    <div class="sidebar">
-        <h5 class="mb-4">HR Menu</h5>
-        <ul class="sidebar-menu">
-            <li><a href="{{ url_for('hr_dashboard') }}" class="active"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
-            <li><a href="#"><i class="fas fa-users me-2"></i>Employee Management</a></li>
-            <li><a href="#"><i class="fas fa-calendar-alt me-2"></i>Leave Management</a></li>
-            <li><a href="#"><i class="fas fa-file-alt me-2"></i>Documents</a></li>
-            <li><a href="#"><i class="fas fa-chart-bar me-2"></i>Reports</a></li>
-        </ul>
-    </div>
-    <div class="main-content">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>HR Dashboard</h2>
-            <div class="text-muted">Welcome, {{ session.get('full_name', session.get('username')) }}</div>
-        </div>
-
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="widget text-center">
-                    <i class="fas fa-users widget-icon"></i>
-                    <h3>{{ employees|length }}</h3>
-                    <p class="text-muted">Total Employees</p>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="widget text-center">
-                    <i class="fas fa-calendar-check widget-icon"></i>
-                    <h3>8</h3>
-                    <p class="text-muted">On Leave Today</p>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="widget text-center">
-                    <i class="fas fa-clock widget-icon"></i>
-                    <h3>5</h3>
-                    <p class="text-muted">Pending Approvals</p>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="widget text-center">
-                    <i class="fas fa-birthday-cake widget-icon"></i>
-                    <h3>2</h3>
-                    <p class="text-muted">Birthdays Today</p>
-                </div>
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-md-2">
+            <div class="sidebar bg-white shadow-sm rounded p-3">
+                <h5 class="mb-4 text-green">HR Menu</h5>
+                <ul class="nav flex-column">
+                    <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('hr_dashboard') }}"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
+                    <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('hr_employees') }}"><i class="fas fa-users me-2"></i>Employees</a></li>
+                    <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('hr_announcements') }}"><i class="fas fa-bullhorn me-2"></i>Announcements</a></li>
+                    <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('hr_settings') }}"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                    <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('hr_complaints') }}"><i class="fas fa-exclamation-circle me-2"></i>Complaints</a></li>
+                    <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('hr_repairs') }}"><i class="fas fa-tools me-2"></i>Repairs</a></li>
+                    <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('hr_events') }}"><i class="fas fa-calendar me-2"></i>Events</a></li>
+                    <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('hr_lunch_orders') }}"><i class="fas fa-utensils me-2"></i>Lunch Orders</a></li>
+                    <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('all_notifications') }}"><i class="fas fa-bell me-2"></i>Notifications</a></li>
+                    <li class="nav-item mt-4"><a class="nav-link text-danger" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                </ul>
             </div>
         </div>
-
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">Employee Directory</h5>
+        <div class="col-md-10">
+            <h2 class="mb-4">HR Dashboard</h2>
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="card shadow-sm text-center">
+                        <div class="card-body">
+                            <i class="fas fa-users fa-2x text-green mb-2"></i>
+                            <h4>{{ total_employees }}</h4>
+                            <p class="mb-0">Total Employees</p>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        {% if employees %}
-                            <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Name</th>
-                                            <th>Department</th>
-                                            <th>Position</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for employee in employees %}
-                                        <tr>
-                                            <td>{{ employee.full_name }}</td>
-                                            <td>{{ employee.department or '-' }}</td>
-                                            <td>{{ employee.position or '-' }}</td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        {% else %}
-                            <p class="text-muted">No employees found.</p>
-                        {% endif %}
+                </div>
+                <div class="col-md-3">
+                    <div class="card shadow-sm text-center">
+                        <div class="card-body">
+                            <i class="fas fa-exclamation-circle fa-2x text-orange mb-2"></i>
+                            <h4>{{ open_complaints }}</h4>
+                            <p class="mb-0">Open Complaints</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card shadow-sm text-center">
+                        <div class="card-body">
+                            <i class="fas fa-tools fa-2x text-green mb-2"></i>
+                            <h4>{{ open_repairs }}</h4>
+                            <p class="mb-0">Open Repairs</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card shadow-sm text-center">
+                        <div class="card-body">
+                            <i class="fas fa-calendar fa-2x text-orange mb-2"></i>
+                            <h4>{{ upcoming_events }}</h4>
+                            <p class="mb-0">Upcoming Events</p>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="card mb-4">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Recent Announcements</h5>
-                        <a href="#" class="btn btn-sm btn-orange">New Announcement</a>
-                    </div>
-                    <div class="card-body">
-                        {% if announcements %}
-                            <div class="list-group">
-                                {% for announcement in announcements %}
-                                <div class="list-group-item border-0">
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <h6 class="mb-1">{{ announcement.title }}</h6>
-                                        <small class="text-muted">{{ announcement.created_at[:10] }}</small>
-                                    </div>
-                                    <p class="mb-1">{{ announcement.content[:100] }}...</p>
-                                    <small class="text-muted">Posted by {{ announcement.author_name }}</small>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <p class="text-muted">No announcements yet.</p>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
+            <!-- Optional: Add recent activity or quick links here -->
         </div>
     </div>
 </div>

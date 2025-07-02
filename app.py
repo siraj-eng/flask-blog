@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, g
+from flask import Flask, render_template, request, redirect, url_for, flash, session, g, make_response
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 import os
@@ -9,9 +9,14 @@ import csv
 from io import StringIO
 from markupsafe import Markup
 from flask_socketio import SocketIO, emit, join_room, leave_room
+from reportlab.lib.pagesizes import letter, landscape
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.platypus import Table, TableStyle, SimpleDocTemplate
+import io
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
-app.secret_key = 'b6cf94b299a1f56d63199b2298f7095c3ee344bd1bb1a77cfd6e03d4a2b95b71'
+app.config['SECRET_KEY'] = 'b6cf94b299a1f56d63199b2298f7095c3ee344bd1bb1a77cfd6e03d4a2b95b71'
 app.config['DATABASE'] = 'hr_system.db'
 
 socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
@@ -53,6 +58,89 @@ def init_db():
             FOREIGN KEY (author_id) REFERENCES users (id)
         )''')
         
+        # Add lunch_orders table
+        db.execute('''
+        CREATE TABLE lunch_orders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            dish TEXT NOT NULL,
+            notes TEXT,
+            status TEXT DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )''')
+        
+        # Add comments table
+        db.execute('''
+        CREATE TABLE comments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            announcement_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            content TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (announcement_id) REFERENCES announcements (id),
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )''')
+        
+        # Add chat_messages table
+        db.execute('''
+        CREATE TABLE chat_messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            username TEXT NOT NULL,
+            message TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )''')
+        
+        # Add notifications table
+        db.execute('''
+        CREATE TABLE notifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            message TEXT NOT NULL,
+            is_read INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            announcement_id INTEGER,
+            FOREIGN KEY (user_id) REFERENCES users (id),
+            FOREIGN KEY (announcement_id) REFERENCES announcements (id)
+        )''')
+        
+        # Add complaints table
+        db.execute('''
+        CREATE TABLE complaints (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            description TEXT NOT NULL,
+            status TEXT DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )''')
+        
+        # Add repairs table
+        db.execute('''
+        CREATE TABLE repairs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            description TEXT NOT NULL,
+            status TEXT DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )''')
+        
+        # Add events table
+        db.execute('''
+        CREATE TABLE events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            description TEXT NOT NULL,
+            event_date DATE NOT NULL,
+            location TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )''')
+        
         # Insert default admin user
         db.execute(
             'INSERT INTO users (username, email, password_hash, role, full_name) VALUES (?, ?, ?, ?, ?)',
@@ -64,6 +152,24 @@ def init_db():
             'INSERT INTO announcements (title, content, author_id) VALUES (?, ?, ?)',
             ('Welcome to HR System', 'This is a sample announcement.', 1)
         )
+        
+        # Add columns for notification and theme preferences if not present
+        try:
+            db.execute('ALTER TABLE users ADD COLUMN notify_complaints INTEGER DEFAULT 1')
+        except sqlite3.OperationalError:
+            pass
+        try:
+            db.execute('ALTER TABLE users ADD COLUMN notify_comments INTEGER DEFAULT 1')
+        except sqlite3.OperationalError:
+            pass
+        try:
+            db.execute('ALTER TABLE users ADD COLUMN notify_new_users INTEGER DEFAULT 1')
+        except sqlite3.OperationalError:
+            pass
+        try:
+            db.execute('ALTER TABLE users ADD COLUMN theme TEXT DEFAULT "dark"')
+        except sqlite3.OperationalError:
+            pass
         
         db.commit()
         print("✅ Database tables created successfully.")
@@ -134,11 +240,15 @@ def hr_required(f):
 # Routes
 @app.route('/')
 def home():
-    return render_template('index.html')
-
-@app.route('/about')
-def about():
-    return render_template('about.html')
+    if 'user_id' in session:
+        role = session.get('role')
+        if role == 'admin':
+            return redirect(url_for('admin_dashboard'))
+        elif role == 'hr':
+            return redirect(url_for('hr_dashboard'))
+        else:
+            return redirect(url_for('dashboard'))
+    return redirect(url_for('login'))
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -255,8 +365,22 @@ def dashboard():
         announcements = db.execute(
             'SELECT a.*, u.full_name as author_name FROM announcements a JOIN users u ON a.author_id = u.id ORDER BY a.created_at DESC LIMIT 5'
         ).fetchall()
-    
-    return render_template('dashboard.html', announcements=announcements)
+        # Count open complaints for this user
+        complaints_count = db.execute(
+            'SELECT COUNT(*) FROM complaints WHERE user_id = ? AND status = "pending"',
+            (session['user_id'],)
+        ).fetchone()[0]
+        # Count open repairs for this user
+        repairs_count = db.execute(
+            'SELECT COUNT(*) FROM repairs WHERE user_id = ? AND status = "pending"',
+            (session['user_id'],)
+        ).fetchone()[0]
+        # Count unread notifications for this user
+        unread_notifications = db.execute(
+            'SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0',
+            (session['user_id'],)
+        ).fetchone()[0]
+    return render_template('user/dashboard.html', announcements=announcements, complaints_count=complaints_count, repairs_count=repairs_count, unread_notifications=unread_notifications)
 
 # Admin Section
 @app.route('/admin/dashboard')
@@ -351,16 +475,11 @@ def update_lunch_order_status(order_id):
 @hr_required
 def hr_dashboard():
     with get_db() as db:
-        announcements = db.execute(
-            'SELECT a.*, u.full_name as author_name FROM announcements a JOIN users u ON a.author_id = u.id ORDER BY a.created_at DESC LIMIT 5'
-        ).fetchall()
-        employees = db.execute(
-            'SELECT id, full_name, department, position FROM users WHERE role = "user" ORDER BY full_name'
-        ).fetchall()
-    
-    return render_template('hr/dashboard.html', 
-                         announcements=announcements,
-                         employees=employees)
+        total_employees = db.execute('SELECT COUNT(*) FROM users WHERE role = "user"').fetchone()[0]
+        open_complaints = db.execute('SELECT COUNT(*) FROM complaints WHERE status = "pending"').fetchone()[0]
+        open_repairs = db.execute('SELECT COUNT(*) FROM repairs WHERE status = "pending"').fetchone()[0]
+        upcoming_events = db.execute('SELECT COUNT(*) FROM events WHERE event_date >= DATE("now")').fetchone()[0]
+    return render_template('hr/dashboard.html', total_employees=total_employees, open_complaints=open_complaints, open_repairs=open_repairs, upcoming_events=upcoming_events)
 
 @app.route('/submit_lunch_order', methods=['POST'])
 @login_required
@@ -475,7 +594,7 @@ def load_notifications():
 @app.route('/chat')
 @login_required
 def chat():
-    return render_template('chat.html')
+    return render_template('user/chat.html')
 
 # SocketIO event for sending/receiving messages
 online_users = set()
@@ -540,6 +659,498 @@ def search():
         comments = db.execute('''SELECT c.*, u.full_name, u.username, a.title as announcement_title FROM comments c JOIN users u ON c.user_id = u.id JOIN announcements a ON c.announcement_id = a.id WHERE c.content LIKE ?''', (f'%{query}%',)).fetchall()
         users = db.execute('''SELECT * FROM users WHERE username LIKE ? OR full_name LIKE ? OR email LIKE ?''', (f'%{query}%', f'%{query}%', f'%{query}%')).fetchall()
     return render_template('search_results.html', query=query, announcements=announcements, comments=comments, users=users)
+
+@app.route('/complaints', methods=['GET', 'POST'])
+@login_required
+def user_complaints():
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        description = request.form.get('description', '').strip()
+        if not title or not description:
+            flash('Title and description are required.', 'danger')
+        else:
+            with get_db() as db:
+                db.execute(
+                    'INSERT INTO complaints (user_id, title, description) VALUES (?, ?, ?)',
+                    (session['user_id'], title, description)
+                )
+                # Notify all HR users
+                hr_users = db.execute('SELECT id FROM users WHERE role IN ("hr", "admin")').fetchall()
+                for hr in hr_users:
+                    db.execute('INSERT INTO notifications (user_id, message) VALUES (?, ?)',
+                               (hr['id'], f'New complaint submitted by {session.get("full_name", session.get("username"))}'))
+                db.commit()
+            flash('Complaint submitted successfully!', 'success')
+        return redirect(url_for('user_complaints'))
+    # GET: show user's complaints
+    with get_db() as db:
+        complaints = db.execute(
+            'SELECT * FROM complaints WHERE user_id = ? ORDER BY created_at DESC',
+            (session['user_id'],)
+        ).fetchall()
+    return render_template('user/complaints.html', complaints=complaints)
+
+@app.route('/repairs', methods=['GET', 'POST'])
+@login_required
+def user_repairs():
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        description = request.form.get('description', '').strip()
+        if not title or not description:
+            flash('Title and description are required.', 'danger')
+        else:
+            with get_db() as db:
+                db.execute(
+                    'INSERT INTO repairs (user_id, title, description) VALUES (?, ?, ?)',
+                    (session['user_id'], title, description)
+                )
+                # Notify all HR users
+                hr_users = db.execute('SELECT id FROM users WHERE role IN ("hr", "admin")').fetchall()
+                for hr in hr_users:
+                    db.execute('INSERT INTO notifications (user_id, message) VALUES (?, ?)',
+                               (hr['id'], f'New repair request submitted by {session.get("full_name", session.get("username"))}'))
+                db.commit()
+            flash('Repair request submitted successfully!', 'success')
+        return redirect(url_for('user_repairs'))
+    # GET: show user's repairs
+    with get_db() as db:
+        repairs = db.execute(
+            'SELECT * FROM repairs WHERE user_id = ? ORDER BY created_at DESC',
+            (session['user_id'],)
+        ).fetchall()
+    return render_template('user/repairs.html', repairs=repairs)
+
+@app.route('/events')
+@login_required
+def user_events():
+    with get_db() as db:
+        events = db.execute(
+            'SELECT * FROM events WHERE event_date >= DATE("now") ORDER BY event_date ASC'
+        ).fetchall()
+    return render_template('user/events.html', events=events)
+
+@app.route('/settings', methods=['GET', 'POST'])
+@login_required
+def user_settings():
+    with get_db() as db:
+        user = db.execute('SELECT * FROM users WHERE id = ?', (session['user_id'],)).fetchone()
+        if request.method == 'POST':
+            full_name = request.form.get('full_name', '').strip()
+            email = request.form.get('email', '').strip().lower()
+            department = request.form.get('department', '').strip()
+            position = request.form.get('position', '').strip()
+            # Update user info
+            db.execute('UPDATE users SET full_name = ?, email = ?, department = ?, position = ? WHERE id = ?',
+                       (full_name, email, department, position, session['user_id']))
+            db.commit()
+            flash('Profile updated successfully.', 'success')
+            # Password change
+            old_password = request.form.get('old_password', '')
+            new_password = request.form.get('new_password', '')
+            confirm_password = request.form.get('confirm_password', '')
+            if old_password or new_password or confirm_password:
+                if not check_password_hash(user['password_hash'], old_password):
+                    flash('Old password is incorrect.', 'danger')
+                elif len(new_password) < 6:
+                    flash('New password must be at least 6 characters.', 'danger')
+                elif new_password != confirm_password:
+                    flash('New passwords do not match.', 'danger')
+                else:
+                    db.execute('UPDATE users SET password_hash = ? WHERE id = ?',
+                               (generate_password_hash(new_password), session['user_id']))
+                    db.commit()
+                    flash('Password updated successfully.', 'success')
+            # Refresh user info
+            user = db.execute('SELECT * FROM users WHERE id = ?', (session['user_id'],)).fetchone()
+    return render_template('user/settings.html', user=user)
+
+@app.route('/hr/employees')
+@hr_required
+def hr_employees():
+    q = request.args.get('q', '').strip()
+    with get_db() as db:
+        if q:
+            employees = db.execute('''
+                SELECT * FROM users WHERE role = "user" AND (
+                    full_name LIKE ? OR username LIKE ? OR department LIKE ? OR position LIKE ?
+                ) ORDER BY created_at DESC''',
+                (f'%{q}%', f'%{q}%', f'%{q}%', f'%{q}%')
+            ).fetchall()
+        else:
+            employees = db.execute('SELECT * FROM users WHERE role = "user" ORDER BY created_at DESC').fetchall()
+    return render_template('hr/employees.html', employees=employees)
+
+@app.route('/hr/employees/<int:user_id>')
+@hr_required
+def hr_employee_detail(user_id):
+    with get_db() as db:
+        employee = db.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
+        if not employee:
+            flash('Employee not found.', 'danger')
+            return redirect(url_for('hr_employees'))
+    return render_template('hr/employee_detail.html', employee=employee)
+
+@app.route('/hr/employees/<int:user_id>/edit', methods=['GET', 'POST'])
+@hr_required
+def hr_employee_edit(user_id):
+    with get_db() as db:
+        employee = db.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
+        if not employee:
+            flash('Employee not found.', 'danger')
+            return redirect(url_for('hr_employees'))
+        if request.method == 'POST':
+            full_name = request.form.get('full_name', '').strip()
+            email = request.form.get('email', '').strip().lower()
+            department = request.form.get('department', '').strip()
+            position = request.form.get('position', '').strip()
+            role = request.form.get('role', employee['role'])
+            db.execute('UPDATE users SET full_name = ?, email = ?, department = ?, position = ?, role = ? WHERE id = ?',
+                       (full_name, email, department, position, role, user_id))
+            db.commit()
+            flash('Employee info updated successfully.', 'success')
+            return redirect(url_for('hr_employee_detail', user_id=user_id))
+    return render_template('hr/employee_edit.html', employee=employee)
+
+@app.route('/hr/employees/export')
+@hr_required
+def hr_employees_export():
+    q = request.args.get('q', '').strip()
+    with get_db() as db:
+        if q:
+            employees = db.execute('''
+                SELECT * FROM users WHERE role = "user" AND (
+                    full_name LIKE ? OR username LIKE ? OR department LIKE ? OR position LIKE ?
+                ) ORDER BY created_at DESC''',
+                (f'%{q}%', f'%{q}%', f'%{q}%', f'%{q}%')
+            ).fetchall()
+        else:
+            employees = db.execute('SELECT * FROM users WHERE role = "user" ORDER BY created_at DESC').fetchall()
+    import csv
+    from io import StringIO
+    si = StringIO()
+    writer = csv.writer(si)
+    writer.writerow(['Full Name', 'Username', 'Email', 'Department', 'Position', 'Date Joined'])
+    for emp in employees:
+        writer.writerow([
+            emp['full_name'] or emp['username'],
+            emp['username'],
+            emp['email'],
+            emp['department'] or '',
+            emp['position'] or '',
+            emp['created_at'][:10]
+        ])
+    output = si.getvalue()
+    return app.response_class(
+        output,
+        mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment;filename=employees.csv'}
+    )
+
+@app.route('/hr/employees/export_pdf')
+@hr_required
+def hr_employees_export_pdf():
+    q = request.args.get('q', '').strip()
+    with get_db() as db:
+        if q:
+            employees = db.execute('''
+                SELECT * FROM users WHERE role = "user" AND (
+                    full_name LIKE ? OR username LIKE ? OR department LIKE ? OR position LIKE ?
+                ) ORDER BY created_at DESC''',
+                (f'%{q}%', f'%{q}%', f'%{q}%', f'%{q}%')
+            ).fetchall()
+        else:
+            employees = db.execute('SELECT * FROM users WHERE role = "user" ORDER BY created_at DESC').fetchall()
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(letter))
+    data = [['Name', 'Department', 'Position', 'Email', 'Date Joined']]
+    for emp in employees:
+        data.append([
+            emp['full_name'] or emp['username'],
+            emp['department'] or '-',
+            emp['position'] or '-',
+            emp['email'],
+            emp['created_at'][:10]
+        ])
+    table = Table(data, repeatRows=1)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f8f9fa')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#1e7e34')),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+    ]))
+    elements = [table]
+    doc.build(elements)
+    buffer.seek(0)
+    return app.response_class(buffer, mimetype='application/pdf', headers={'Content-Disposition': 'attachment; filename=employees.pdf'})
+
+@app.route('/hr/complaints')
+@hr_required
+def hr_complaints():
+    status = request.args.get('status', '').strip()
+    q = request.args.get('q', '').strip()
+    with get_db() as db:
+        query = '''SELECT c.*, u.full_name, u.username, u.department FROM complaints c JOIN users u ON c.user_id = u.id WHERE 1=1'''
+        params = []
+        if status:
+            query += ' AND c.status = ?'
+            params.append(status)
+        if q:
+            query += ' AND (c.title LIKE ? OR c.description LIKE ? OR u.full_name LIKE ? OR u.username LIKE ? OR u.department LIKE ?)' 
+            params += [f'%{q}%', f'%{q}%', f'%{q}%', f'%{q}%', f'%{q}%']
+        query += ' ORDER BY c.created_at DESC'
+        complaints = db.execute(query, params).fetchall()
+    return render_template('hr/complaints.html', complaints=complaints, status=status, q=q)
+
+@app.route('/hr/complaints/<int:complaint_id>', methods=['GET', 'POST'])
+@hr_required
+def hr_complaint_detail(complaint_id):
+    with get_db() as db:
+        complaint = db.execute('''
+            SELECT c.*, u.full_name, u.username, u.department FROM complaints c
+            JOIN users u ON c.user_id = u.id WHERE c.id = ?''', (complaint_id,)).fetchone()
+        if not complaint:
+            flash('Complaint not found.', 'danger')
+            return redirect(url_for('hr_complaints'))
+        if request.method == 'POST':
+            new_status = request.form.get('status', complaint['status'])
+            db.execute('UPDATE complaints SET status = ? WHERE id = ?', (new_status, complaint_id))
+            db.commit()
+            flash('Complaint status updated.', 'success')
+            return redirect(url_for('hr_complaint_detail', complaint_id=complaint_id))
+    return render_template('hr/complaint_detail.html', complaint=complaint)
+
+@app.route('/hr/announcements', methods=['GET', 'POST'])
+@hr_required
+def hr_announcements():
+    with get_db() as db:
+        if request.method == 'POST':
+            title = request.form.get('title', '').strip()
+            content = request.form.get('content', '').strip()
+            image = request.files.get('image')
+            image_filename = None
+            if image and image.filename:
+                image_filename = f"announcement_{datetime.now().strftime('%Y%m%d%H%M%S')}_{image.filename}"
+                image.save(os.path.join('static', 'img', image_filename))
+            # Store image filename in content as a special tag (or add a new column if needed)
+            if image_filename:
+                content += f'\n<img src="/static/img/{image_filename}" class="img-fluid rounded mt-3" alt="Announcement Image">'
+            db.execute(
+                'INSERT INTO announcements (title, content, author_id) VALUES (?, ?, ?)',
+                (title, content, session['user_id'])
+            )
+            db.commit()
+            flash('Announcement posted successfully!', 'success')
+            return redirect(url_for('hr_announcements'))
+        announcements = db.execute(
+            'SELECT a.*, u.full_name as author_name FROM announcements a JOIN users u ON a.author_id = u.id ORDER BY a.created_at DESC'
+        ).fetchall()
+    return render_template('hr/announcements.html', announcements=announcements)
+
+@app.route('/hr/settings', methods=['GET', 'POST'])
+@hr_required
+def hr_settings():
+    user_id = session['user_id']
+    with get_db() as db:
+        user = db.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
+        if request.method == 'POST':
+            # Profile update
+            full_name = request.form.get('full_name', '').strip()
+            email = request.form.get('email', '').strip().lower()
+            department = request.form.get('department', '').strip()
+            position = request.form.get('position', '').strip()
+            theme = request.form.get('theme', user['theme'])
+            notify_complaints = 1 if request.form.get('notify_complaints') == 'on' else 0
+            notify_comments = 1 if request.form.get('notify_comments') == 'on' else 0
+            notify_new_users = 1 if request.form.get('notify_new_users') == 'on' else 0
+            db.execute('UPDATE users SET full_name=?, email=?, department=?, position=?, theme=?, notify_complaints=?, notify_comments=?, notify_new_users=? WHERE id=?',
+                (full_name, email, department, position, theme, notify_complaints, notify_comments, notify_new_users, user_id))
+            db.commit()
+            # Password change
+            old_password = request.form.get('old_password', '')
+            new_password = request.form.get('new_password', '')
+            confirm_password = request.form.get('confirm_password', '')
+            if old_password or new_password or confirm_password:
+                if not check_password_hash(user['password_hash'], old_password):
+                    flash('Old password is incorrect.', 'danger')
+                elif len(new_password) < 6:
+                    flash('New password must be at least 6 characters.', 'danger')
+                elif new_password != confirm_password:
+                    flash('New passwords do not match.', 'danger')
+                else:
+                    db.execute('UPDATE users SET password_hash = ? WHERE id = ?',
+                        (generate_password_hash(new_password), user_id))
+                    db.commit()
+                    flash('Password updated successfully.', 'success')
+            flash('Settings updated successfully.', 'success')
+            user = db.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
+        # Dummy login history for now
+        login_history = [
+            {'time': '2024-06-01 09:00', 'ip': '192.168.1.10'},
+            {'time': '2024-05-30 17:22', 'ip': '192.168.1.11'},
+        ]
+    return render_template('hr/settings.html', user=user, login_history=login_history)
+
+# HR Event Management
+@app.route('/hr/events', methods=['GET', 'POST'])
+@hr_required
+def hr_events():
+    with get_db() as db:
+        if request.method == 'POST':
+            title = request.form.get('title', '').strip()
+            description = request.form.get('description', '').strip()
+            event_date = request.form.get('event_date', '').strip()
+            location = request.form.get('location', '').strip()
+            if not title or not description or not event_date:
+                flash('Title, description, and date are required.', 'danger')
+            else:
+                db.execute('INSERT INTO events (title, description, event_date, location) VALUES (?, ?, ?, ?)',
+                           (title, description, event_date, location))
+                db.commit()
+                flash('Event created successfully!', 'success')
+            return redirect(url_for('hr_events'))
+        events = db.execute('SELECT * FROM events ORDER BY event_date ASC').fetchall()
+    return render_template('hr/events.html', events=events)
+
+@app.route('/hr/events/<int:event_id>/edit', methods=['GET', 'POST'])
+@hr_required
+def hr_event_edit(event_id):
+    with get_db() as db:
+        event = db.execute('SELECT * FROM events WHERE id = ?', (event_id,)).fetchone()
+        if not event:
+            flash('Event not found.', 'danger')
+            return redirect(url_for('hr_events'))
+        if request.method == 'POST':
+            title = request.form.get('title', '').strip()
+            description = request.form.get('description', '').strip()
+            event_date = request.form.get('event_date', '').strip()
+            location = request.form.get('location', '').strip()
+            db.execute('UPDATE events SET title=?, description=?, event_date=?, location=? WHERE id=?',
+                       (title, description, event_date, location, event_id))
+            db.commit()
+            flash('Event updated successfully.', 'success')
+            return redirect(url_for('hr_events'))
+    return render_template('hr/event_edit.html', event=event)
+
+@app.route('/hr/events/<int:event_id>/delete', methods=['POST'])
+@hr_required
+def hr_event_delete(event_id):
+    with get_db() as db:
+        db.execute('DELETE FROM events WHERE id = ?', (event_id,))
+        db.commit()
+        flash('Event deleted.', 'success')
+    return redirect(url_for('hr_events'))
+
+# HR Repairs Management
+@app.route('/hr/repairs')
+@hr_required
+def hr_repairs():
+    status = request.args.get('status', '').strip()
+    q = request.args.get('q', '').strip()
+    with get_db() as db:
+        query = '''SELECT r.*, u.full_name, u.username, u.department FROM repairs r JOIN users u ON r.user_id = u.id WHERE 1=1'''
+        params = []
+        if status:
+            query += ' AND r.status = ?'
+            params.append(status)
+        if q:
+            query += ' AND (r.title LIKE ? OR r.description LIKE ? OR u.full_name LIKE ? OR u.username LIKE ? OR u.department LIKE ?)' 
+            params += [f'%{q}%', f'%{q}%', f'%{q}%', f'%{q}%', f'%{q}%']
+        query += ' ORDER BY r.created_at DESC'
+        repairs = db.execute(query, params).fetchall()
+    return render_template('hr/repairs.html', repairs=repairs, status=status, q=q)
+
+@app.route('/hr/repairs/<int:repair_id>', methods=['GET', 'POST'])
+@hr_required
+def hr_repair_detail(repair_id):
+    with get_db() as db:
+        repair = db.execute('''
+            SELECT r.*, u.full_name, u.username, u.department FROM repairs r
+            JOIN users u ON r.user_id = u.id WHERE r.id = ?''', (repair_id,)).fetchone()
+        if not repair:
+            flash('Repair not found.', 'danger')
+            return redirect(url_for('hr_repairs'))
+        if request.method == 'POST':
+            new_status = request.form.get('status', repair['status'])
+            db.execute('UPDATE repairs SET status = ? WHERE id = ?', (new_status, repair_id))
+            db.commit()
+            flash('Repair status updated.', 'success')
+            return redirect(url_for('hr_repair_detail', repair_id=repair_id))
+    return render_template('hr/repair_detail.html', repair=repair)
+
+# Mark all notifications as read
+@app.route('/notifications/mark_all_read', methods=['POST'])
+@login_required
+def mark_all_notifications_read():
+    with get_db() as db:
+        db.execute('UPDATE notifications SET is_read = 1 WHERE user_id = ?', (session['user_id'],))
+        db.commit()
+    flash('All notifications marked as read.', 'success')
+    return redirect(request.referrer or url_for('dashboard'))
+
+# View all notifications
+@app.route('/notifications')
+@login_required
+def all_notifications():
+    with get_db() as db:
+        notifications = db.execute(
+            'SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC',
+            (session['user_id'],)
+        ).fetchall()
+    return render_template('notifications.html', notifications=notifications)
+
+# HR Lunch Orders Management
+@app.route('/hr/lunch_orders', methods=['GET', 'POST'])
+@hr_required
+def hr_lunch_orders():
+    today = datetime.now().strftime('%Y-%m-%d')
+    with get_db() as db:
+        if request.method == 'POST':
+            order_id = request.form.get('order_id')
+            status = request.form.get('status', 'pending')
+            db.execute('UPDATE lunch_orders SET status = ? WHERE id = ?', (status, order_id))
+            db.commit()
+            flash('Lunch order status updated.', 'success')
+            return redirect(url_for('hr_lunch_orders'))
+        orders = db.execute('''
+            SELECT lo.*, u.full_name, u.username FROM lunch_orders lo
+            JOIN users u ON lo.user_id = u.id
+            WHERE DATE(lo.created_at) = ?
+            ORDER BY lo.created_at ASC
+        ''', (today,)).fetchall()
+    return render_template('hr/lunch_orders.html', orders=orders, today=today)
+
+@app.route('/hr/lunch_orders/download')
+@hr_required
+def hr_download_lunch_orders():
+    today = datetime.now().strftime('%Y-%m-%d')
+    with get_db() as db:
+        orders = db.execute('''
+            SELECT lo.*, u.full_name, u.username FROM lunch_orders lo
+            JOIN users u ON lo.user_id = u.id
+            WHERE DATE(lo.created_at) = ?
+            ORDER BY lo.created_at ASC
+        ''', (today,)).fetchall()
+    si = StringIO()
+    writer = csv.writer(si)
+    writer.writerow(['Employee', 'Dish', 'Notes', 'Status', 'Time'])
+    for order in orders:
+        writer.writerow([
+            order['full_name'] or order['username'],
+            order['dish'],
+            order['notes'] or '',
+            order['status'],
+            order['created_at'][11:16]
+        ])
+    output = si.getvalue()
+    return app.response_class(
+        output,
+        mimetype='text/csv',
+        headers={'Content-Disposition': f'attachment;filename=lunch_orders_{today}.csv'}
+    )
 
 if __name__ == '__main__':
     # Create required directories if they don't exist

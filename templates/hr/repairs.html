@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Repairs - SoftNet Internal{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="mb-3">
+    <a href="{{ url_for('hr_dashboard') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>Back to Dashboard</a>
+  </div>
+  <h2 class="mb-4">Repairs Management</h2>
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <form method="get" class="mb-3 row g-2 align-items-center">
+        <div class="col-md-3">
+          <select class="form-select" name="status">
+            <option value="">All Statuses</option>
+            <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+            <option value="in progress" {% if status == 'in progress' %}selected{% endif %}>In Progress</option>
+            <option value="resolved" {% if status == 'resolved' %}selected{% endif %}>Resolved</option>
+            <option value="dismissed" {% if status == 'dismissed' %}selected{% endif %}>Dismissed</option>
+          </select>
+        </div>
+        <div class="col-md-5">
+          <input type="text" class="form-control" name="q" placeholder="Search by title, user, department..." value="{{ q }}">
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-green w-100"><i class="fas fa-search me-1"></i>Search</button>
+        </div>
+      </form>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Title</th>
+              <th>User</th>
+              <th>Department</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in repairs %}
+            <tr>
+              <td>{{ r.title }}</td>
+              <td>{{ r.full_name or r.username }}</td>
+              <td>{{ r.department or '-' }}</td>
+              <td><span class="badge {% if r.status == 'pending' %}bg-warning text-dark{% elif r.status == 'resolved' %}bg-success{% elif r.status == 'in progress' %}bg-info text-dark{% else %}bg-secondary{% endif %}">{{ r.status|capitalize }}</span></td>
+              <td>{{ r.created_at[:10] }}</td>
+              <td><a href="{{ url_for('hr_repair_detail', repair_id=r.id) }}" class="btn btn-sm btn-outline-primary">View</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if not repairs %}
+        <p class="text-muted mt-3">No repairs found.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %} 

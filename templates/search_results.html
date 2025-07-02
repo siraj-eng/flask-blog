@@ -8,68 +8,99 @@
 
 {% block content %}
 <div class="container my-4">
-    <h3 class="mb-4">Search Results for <span class="text-orange">"{{ query }}"</span></h3>
-    <form method="get" action="{{ url_for('search') }}" class="mb-4">
-        <input type="hidden" name="q" value="{{ query }}">
-        <div class="btn-group" role="group">
-            <button type="submit" name="filter" value="all" class="btn btn-outline-green{% if not request.args.get('filter') or request.args.get('filter') == 'all' %} active{% endif %}">All</button>
-            <button type="submit" name="filter" value="announcements" class="btn btn-outline-green{% if request.args.get('filter') == 'announcements' %} active{% endif %}">Announcements</button>
-            <button type="submit" name="filter" value="comments" class="btn btn-outline-green{% if request.args.get('filter') == 'comments' %} active{% endif %}">Comments</button>
-            <button type="submit" name="filter" value="users" class="btn btn-outline-green{% if request.args.get('filter') == 'users' %} active{% endif %}">Users</button>
-        </div>
-    </form>
+    <div class="card shadow-sm mb-4 p-3 bg-white rounded">
+        <h3 class="mb-3">Search Results for <span class="text-orange">"{{ query }}"</span></h3>
+        <form method="get" action="{{ url_for('search') }}" class="mb-3">
+            <input type="hidden" name="q" value="{{ query }}">
+            <div class="btn-group" role="group">
+                <button type="submit" name="filter" value="all" class="btn btn-outline-green{% if not request.args.get('filter') or request.args.get('filter') == 'all' %} active{% endif %}"><i class="fas fa-search me-1"></i>All</button>
+                <button type="submit" name="filter" value="announcements" class="btn btn-outline-green{% if request.args.get('filter') == 'announcements' %} active{% endif %}"><i class="fas fa-bullhorn me-1"></i>Announcements</button>
+                <button type="submit" name="filter" value="comments" class="btn btn-outline-green{% if request.args.get('filter') == 'comments' %} active{% endif %}"><i class="fas fa-comments me-1"></i>Comments</button>
+                <button type="submit" name="filter" value="users" class="btn btn-outline-green{% if request.args.get('filter') == 'users' %} active{% endif %}"><i class="fas fa-user me-1"></i>Users</button>
+            </div>
+        </form>
+    </div>
     {% set filter = request.args.get('filter', 'all') %}
     {% if filter in ['all', 'announcements'] %}
     <div class="mb-5">
-        <h5 class="text-green">Announcements</h5>
+        <div class="d-flex align-items-center mb-2">
+            <i class="fas fa-bullhorn text-orange me-2"></i>
+            <h5 class="text-green mb-0">Announcements</h5>
+        </div>
         {% if announcements %}
-            <ul class="list-group mb-3">
+            <div class="row g-3">
                 {% for a in announcements %}
-                <li class="list-group-item">
-                    <a href="{{ url_for('view_announcement', announcement_id=a.id) }}" class="fw-bold">{{ highlight(a.title, query) }}</a>
-                    <div class="small text-muted">by {{ a.author_name }} on {{ a.created_at[:10] }}</div>
-                    <div>{{ highlight(a.content[:120], query) }}...</div>
-                </li>
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <a href="{{ url_for('view_announcement', announcement_id=a.id) }}" class="fw-bold h5 text-decoration-none text-orange">{{ highlight(a.title, query) }}</a>
+                            <div class="small text-muted mb-1">by {{ a.author_name }} on {{ a.created_at[:10] }}</div>
+                            <div>{{ highlight(a.content[:120], query) }}...</div>
+                        </div>
+                    </div>
+                </div>
                 {% endfor %}
-            </ul>
+            </div>
         {% else %}
-            <p class="text-muted">No announcements found.</p>
+            <div class="text-center text-muted my-3"><i class="fas fa-bullhorn fa-2x mb-2"></i><br>No announcements found.</div>
         {% endif %}
     </div>
     {% endif %}
     {% if filter in ['all', 'comments'] %}
     <div class="mb-5">
-        <h5 class="text-green">Comments</h5>
+        <div class="d-flex align-items-center mb-2">
+            <i class="fas fa-comments text-orange me-2"></i>
+            <h5 class="text-green mb-0">Comments</h5>
+        </div>
         {% if comments %}
-            <ul class="list-group mb-3">
+            <div class="row g-3">
                 {% for c in comments %}
-                <li class="list-group-item">
-                    <div><strong>{{ c.full_name or c.username }}</strong> on <a href="{{ url_for('view_announcement', announcement_id=c.announcement_id) }}">{{ c.announcement_title }}</a></div>
-                    <div>{{ highlight(c.content, query) }}</div>
-                    <div class="small text-muted">{{ c.created_at[:16] }}</div>
-                </li>
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <div><strong>{{ c.full_name or c.username }}</strong> on <a href="{{ url_for('view_announcement', announcement_id=c.announcement_id) }}">{{ c.announcement_title }}</a></div>
+                            <div>{{ highlight(c.content, query) }}</div>
+                            <div class="small text-muted mt-1">{{ c.created_at[:16] }}</div>
+                        </div>
+                    </div>
+                </div>
                 {% endfor %}
-            </ul>
+            </div>
         {% else %}
-            <p class="text-muted">No comments found.</p>
+            <div class="text-center text-muted my-3"><i class="fas fa-comments fa-2x mb-2"></i><br>No comments found.</div>
         {% endif %}
     </div>
     {% endif %}
     {% if filter in ['all', 'users'] %}
     <div class="mb-5">
-        <h5 class="text-green">Users</h5>
+        <div class="d-flex align-items-center mb-2">
+            <i class="fas fa-user text-orange me-2"></i>
+            <h5 class="text-green mb-0">Users</h5>
+        </div>
         {% if users %}
-            <ul class="list-group mb-3">
+            <div class="row g-3">
                 {% for u in users %}
-                <li class="list-group-item">
-                    <div class="fw-bold">{{ highlight(u.full_name or u.username, query) }}</div>
-                    <div class="small text-muted">{{ highlight(u.email, query) }}</div>
-                    <div class="small">Department: {{ u.department or '-' }}, Position: {{ u.position or '-' }}</div>
-                </li>
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="avatar rounded-circle bg-orange text-white d-flex align-items-center justify-content-center me-2" style="width:36px;height:36px;font-weight:bold;">
+                                    {{ (u.full_name or u.username)[0]|upper }}
+                                </div>
+                                <div>
+                                    <span class="fw-bold">{{ highlight(u.full_name or u.username, query) }}</span>
+                                    {% if u.role %}<span class="badge bg-green ms-2">{{ u.role|capitalize }}</span>{% endif %}
+                                </div>
+                            </div>
+                            <div class="small text-muted">{{ highlight(u.email, query) }}</div>
+                            <div class="small">Department: {{ u.department or '-' }}, Position: {{ u.position or '-' }}</div>
+                        </div>
+                    </div>
+                </div>
                 {% endfor %}
-            </ul>
+            </div>
         {% else %}
-            <p class="text-muted">No users found.</p>
+            <div class="text-center text-muted my-3"><i class="fas fa-user fa-2x mb-2"></i><br>No users found.</div>
         {% endif %}
     </div>
     {% endif %}

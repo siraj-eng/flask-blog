@@ -1,0 +1,522 @@
+{% extends 'base.html' %}
+{% block title %}My Complaints - Modern HR System{% endblock %}
+{% block content %}
+<style>
+    .complaints-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.8) 100%);
+        min-height: 100vh;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding: 2rem;
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.8));
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.1), transparent);
+        animation: headerShine 3s ease-in-out infinite;
+    }
+
+    @keyframes headerShine {
+        0%, 100% { left: -100%; }
+        50% { left: 100%; }
+    }
+
+    .page-header h2 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--primary-green), var(--light-green));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+        z-index: 1;
+        position: relative;
+    }
+
+    .page-header p {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+        z-index: 1;
+        position: relative;
+    }
+
+    .complaints-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .complaint-form-card {
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        position: relative;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+
+    .complaint-form-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary-green), var(--light-green), #fbbf24);
+        background-size: 200% 100%;
+        animation: gradientMove 3s ease-in-out infinite;
+    }
+
+    @keyframes gradientMove {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+
+    .complaint-form-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(34, 197, 94, 0.2);
+        border-color: var(--primary-green);
+    }
+
+    .card-header-custom {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05));
+        padding: 2rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .card-header-custom h5 {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: var(--primary-green);
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .card-header-custom i {
+        font-size: 1.5rem;
+        animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-8px); }
+        60% { transform: translateY(-4px); }
+    }
+
+    .card-body-custom {
+        padding: 2rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+        position: relative;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--text-light);
+        font-size: 0.95rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 1rem 1.25rem;
+        background: rgba(51, 65, 85, 0.6);
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        color: var(--text-light);
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-green);
+        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
+        transform: scale(1.02);
+        background: rgba(51, 65, 85, 0.8);
+    }
+
+    .form-control::placeholder {
+        color: var(--text-muted);
+        transition: opacity 0.3s ease;
+    }
+
+    .form-control:focus::placeholder {
+        opacity: 0.7;
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, var(--primary-green), var(--dark-green));
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .btn-submit::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-submit:hover::before {
+        left: 100%;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 30px rgba(34, 197, 94, 0.4);
+    }
+
+    .btn-submit:active {
+        transform: translateY(0);
+    }
+
+    /* Complaints List */
+    .complaints-list-card {
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+
+    .complaints-list-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(34, 197, 94, 0.15);
+    }
+
+    .complaint-item {
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(51, 65, 85, 0.3);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .complaint-item:last-child {
+        border-bottom: none;
+    }
+
+    .complaint-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.05), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .complaint-item:hover::before {
+        left: 100%;
+    }
+
+    .complaint-item:hover {
+        background: rgba(34, 197, 94, 0.05);
+        transform: translateX(10px);
+    }
+
+    .complaint-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .complaint-title {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: var(--text-light);
+    }
+
+    .status-badge {
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        animation: pulse 2s infinite;
+    }
+
+    .status-pending {
+        background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        color: white;
+    }
+
+    .status-resolved {
+        background: linear-gradient(135deg, var(--primary-green), var(--dark-green));
+        color: white;
+    }
+
+    .status-in-progress {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+    }
+
+    .complaint-meta {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .complaint-description {
+        color: var(--text-light);
+        line-height: 1.6;
+        background: rgba(51, 65, 85, 0.3);
+        padding: 1rem;
+        border-radius: 8px;
+        border-left: 4px solid var(--primary-green);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--text-muted);
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+        animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 768px) {
+        .complaints-container {
+            padding: 1rem;
+        }
+        
+        .complaints-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        .page-header h2 {
+            font-size: 2rem;
+        }
+        
+        .card-header-custom,
+        .card-body-custom {
+            padding: 1.5rem;
+        }
+        
+        .complaint-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+    }
+
+    /* Loading Animation */
+    .loading-form {
+        pointer-events: none;
+        opacity: 0.7;
+    }
+
+    .loading-form .btn-submit {
+        background: linear-gradient(135deg, var(--text-muted), #64748b);
+    }
+</style>
+
+<div class="complaints-container">
+    <div class="page-header">
+        <h2><i class="fas fa-exclamation-triangle"></i> Complaint Management</h2>
+        <p>Submit and track your workplace concerns with ease</p>
+    </div>
+    
+    <div class="complaints-grid">
+        <div class="complaint-form-card">
+            <div class="card-header-custom">
+                <h5><i class="fas fa-plus-circle"></i>Submit New Complaint</h5>
+            </div>
+            <div class="card-body-custom">
+                <form method="POST" action="{{ url_for('user_complaints') }}" id="complaintForm">
+                    <div class="form-group">
+                        <label for="title" class="form-label">
+                            <i class="fas fa-heading"></i> Complaint Title
+                        </label>
+                        <input type="text" class="form-control" id="title" name="title" 
+                               placeholder="Brief description of your concern..." 
+                               required maxlength="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="description" class="form-label">
+                            <i class="fas fa-align-left"></i> Detailed Description
+                        </label>
+                        <textarea class="form-control" id="description" name="description" 
+                                  rows="6" required
+                                  placeholder="Please provide detailed information about your complaint. Include relevant dates, people involved, and any supporting information..."></textarea>
+                    </div>
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-paper-plane"></i>
+                        Submit Complaint
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="complaints-list-card">
+            <div class="card-header-custom">
+                <h5><i class="fas fa-list-alt"></i>Your Complaints</h5>
+            </div>
+            <div class="card-body-custom" style="padding: 0;">
+                {% if complaints %}
+                    {% for complaint in complaints %}
+                    <div class="complaint-item">
+                        <div class="complaint-header">
+                            <div class="complaint-title">{{ complaint.title }}</div>
+                            <span class="status-badge status-{{ complaint.status }}">
+                                {% if complaint.status == 'pending' %}
+                                    <i class="fas fa-clock"></i> {{ complaint.status|capitalize }}
+                                {% elif complaint.status == 'resolved' %}
+                                    <i class="fas fa-check-circle"></i> {{ complaint.status|capitalize }}
+                                {% else %}
+                                    <i class="fas fa-cog fa-spin"></i> {{ complaint.status|capitalize }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="complaint-meta">
+                            <i class="fas fa-calendar"></i>
+                            Submitted on {{ complaint.created_at }}
+                        </div>
+                        <div class="complaint-description">
+                            {{ complaint.description }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <h4>No Complaints Yet</h4>
+                        <p>You haven't submitted any complaints. Use the form on the left to submit your first complaint.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Form submission handling
+    document.getElementById('complaintForm').addEventListener('submit', function(e) {
+        const form = e.target;
+        const submitBtn = form.querySelector('.btn-submit');
+        
+        // Add loading state
+        form.classList.add('loading-form');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+        submitBtn.disabled = true;
+        
+        // Show success message (this would be handled by Flask in real implementation)
+        setTimeout(() => {
+            showToast('Complaint submitted successfully!', 'success');
+        }, 1000);
+    });
+
+    // Form validation with real-time feedback
+    const titleInput = document.getElementById('title');
+    const descriptionInput = document.getElementById('description');
+    
+    titleInput.addEventListener('input', function() {
+        const length = this.value.length;
+        const maxLength = 100;
+        
+        if (length > maxLength * 0.8) {
+            this.style.borderColor = '#fbbf24';
+        } else {
+            this.style.borderColor = 'var(--border-color)';
+        }
+    });
+    
+    descriptionInput.addEventListener('input', function() {
+        const length = this.value.length;
+        
+        if (length < 20) {
+            this.style.borderColor = '#ef4444';
+        } else if (length < 50) {
+            this.style.borderColor = '#fbbf24';
+        } else {
+            this.style.borderColor = 'var(--primary-green)';
+        }
+    });
+
+    // Auto-resize textarea
+    descriptionInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = this.scrollHeight + 'px';
+    });
+
+    // Add entrance animations
+    document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.complaint-form-card, .complaints-list-card');
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            
+            setTimeout(() => {
+                card.style.transition = 'all 0.6s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 200);
+        });
+    });
+</script>
+{% endblock %}

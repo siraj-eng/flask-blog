@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}HR Events - SoftNet Internal{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="mb-3">
+    <a href="{{ url_for('hr_dashboard') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>Back to Dashboard</a>
+  </div>
+  <div class="row">
+    <div class="col-md-5">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-orange text-white">
+          <h5 class="mb-0">Create Event</h5>
+        </div>
+        <div class="card-body">
+          <form method="POST">
+            <div class="mb-3">
+              <label for="title" class="form-label">Title</label>
+              <input type="text" class="form-control" id="title" name="title" required maxlength="100">
+            </div>
+            <div class="mb-3">
+              <label for="description" class="form-label">Description</label>
+              <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="event_date" class="form-label">Date</label>
+              <input type="date" class="form-control" id="event_date" name="event_date" required>
+            </div>
+            <div class="mb-3">
+              <label for="location" class="form-label">Location</label>
+              <input type="text" class="form-control" id="location" name="location">
+            </div>
+            <button type="submit" class="btn btn-green">Create Event</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-7">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-green text-white">
+          <h5 class="mb-0">All Events</h5>
+        </div>
+        <div class="card-body">
+          {% if events %}
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Title</th>
+                  <th>Date</th>
+                  <th>Location</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for event in events %}
+                <tr>
+                  <td>{{ event.title }}</td>
+                  <td>{{ event.event_date }}</td>
+                  <td>{{ event.location or '-' }}</td>
+                  <td>
+                    <a href="{{ url_for('hr_event_edit', event_id=event.id) }}" class="btn btn-sm btn-primary">Edit</a>
+                    <form method="POST" action="{{ url_for('hr_event_delete', event_id=event.id) }}" style="display:inline;">
+                      <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this event?')">Delete</button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+            <p class="text-muted">No events found.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 

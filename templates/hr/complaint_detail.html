@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Complaint Details - SoftNet Internal{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-orange text-white">
+          <h4 class="mb-0">Complaint Details</h4>
+        </div>
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-sm-4">Title</dt>
+            <dd class="col-sm-8">{{ complaint.title }}</dd>
+            <dt class="col-sm-4">Description</dt>
+            <dd class="col-sm-8">{{ complaint.description }}</dd>
+            <dt class="col-sm-4">User</dt>
+            <dd class="col-sm-8">{{ complaint.full_name or complaint.username }}</dd>
+            <dt class="col-sm-4">Department</dt>
+            <dd class="col-sm-8">{{ complaint.department or '-' }}</dd>
+            <dt class="col-sm-4">Status</dt>
+            <dd class="col-sm-8">
+              <form method="POST" class="d-inline">
+                <select name="status" class="form-select d-inline w-auto">
+                  <option value="pending" {% if complaint.status == 'pending' %}selected{% endif %}>Pending</option>
+                  <option value="resolved" {% if complaint.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                  <option value="dismissed" {% if complaint.status == 'dismissed' %}selected{% endif %}>Dismissed</option>
+                </select>
+                <button type="submit" class="btn btn-success btn-sm ms-2">Update</button>
+              </form>
+            </dd>
+            <dt class="col-sm-4">Date Submitted</dt>
+            <dd class="col-sm-8">{{ complaint.created_at[:16] }}</dd>
+          </dl>
+        </div>
+        <div class="card-footer text-end">
+          <a href="{{ url_for('hr_complaints') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>Back to Complaints</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 
