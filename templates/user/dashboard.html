@@ -443,16 +443,60 @@
             </div>
         </div>
 
+        {% for order in lunch_orders %}
+            {% if order.created_at[:10] == today_str %}
+                {% if order.status == 'pending' %}
+                    <div class="alert alert-warning text-center mb-3">
+                        <i class="fas fa-hourglass-half"></i> Your order has been <strong>sent</strong> and is awaiting processing.
+                    </div>
+                {% elif order.status in ['received', 'completed'] %}
+                    <div class="alert alert-info text-center mb-3">
+                        <i class="fas fa-check-circle"></i> Your order has been <strong>received</strong> and it is being processed.
+                    </div>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+
+        {% if not today_menu %}
+        <div class="alert alert-warning text-center mb-4">
+            <i class="fas fa-info-circle"></i> No lunch menu has been posted for today yet. Please check back later.
+        </div>
+        {% endif %}
+
+        {% if today_menu %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="fas fa-utensils"></i> Today's Menu</h5>
+            </div>
+            <div class="card-body">
+                {% if today_menu.image_url %}
+                    <img src="{{ today_menu.image_url }}" alt="Menu Image" style="max-width: 300px; max-height: 200px; margin-bottom: 1rem;">
+                {% endif %}
+                <div><strong>Main Menu:</strong> {{ today_menu.main_menu }}</div>
+                {% if today_menu.accompaniment %}
+                    <div><strong>Accompaniment:</strong> {{ today_menu.accompaniment }}</div>
+                {% endif %}
+                {% if today_menu.notes %}
+                    <div><strong>Notes:</strong> {{ today_menu.notes }}</div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
         <div class="lunch-section">
             <div class="card">
                 <div class="card-header">
                     <h5><i class="fas fa-utensils"></i>Daily Lunch Order</h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ url_for('submit_lunch_order') }}" class="lunch-form" style="background: none; border: none; padding: 0;">
+                    <form method="POST" enctype="multipart/form-data">
                         <div class="form-group">
-                            <label for="dish" class="form-label">What's on your plate today?</label>
-                            <input type="text" class="form-control" id="dish" name="dish" placeholder="Enter your lunch preference..." required>
+                            <label for="main_menu" class="form-label">Main Menu</label>
+                            <input type="text" class="form-control" id="main_menu" name="main_menu" placeholder="Enter main menu item..." required>
+                        </div>
+                        <div class="form-group">
+                            <label for="accompaniment" class="form-label">Accompaniment</label>
+                            <input type="text" class="form-control" id="accompaniment" name="accompaniment" placeholder="Enter accompaniment...">
                         </div>
                         <div class="form-group">
                             <label for="notes" class="form-label">Special Instructions</label>

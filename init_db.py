@@ -1,7 +1,7 @@
 import sqlite3
 
 def create_db():
-    conn = sqlite3.connect('users.db')
+    conn = sqlite3.connect('hr_system.db')
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS users (
@@ -59,9 +59,29 @@ def create_db():
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
     ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS lunch_menus (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date TEXT NOT NULL UNIQUE,
+            main_menu TEXT NOT NULL,
+            accompaniment TEXT,
+            image_url TEXT,
+            notes TEXT
+        )
+    ''')
     conn.commit()
     conn.close()
     print("✅ users.db created successfully.")
+
+    # Add these index creation statements at the end of your DB initialization script
+    conn = sqlite3.connect('hr_system.db')
+    c = conn.cursor()
+    c.execute('CREATE INDEX IF NOT EXISTS idx_complaints_user_status ON complaints(user_id, status)')
+    c.execute('CREATE INDEX IF NOT EXISTS idx_repairs_user_status ON repairs(user_id, status)')
+    c.execute('CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id, is_read)')
+    c.execute('CREATE INDEX IF NOT EXISTS idx_announcements_author ON announcements(author_id)')
+    conn.commit()
+    conn.close()
 
 if __name__ == '__main__':
     create_db()

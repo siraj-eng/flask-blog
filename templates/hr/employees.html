@@ -14,7 +14,6 @@
             <button type="submit" class="btn btn-green w-100"><i class="fas fa-search me-1"></i>Search</button>
           </div>
         </div>
-        <a href="{{ url_for('hr_employees_export', q=request.args.get('q', '')) }}" class="btn btn-outline-primary ms-3"><i class="fas fa-file-csv me-1"></i>Export CSV</a>
         <a href="{{ url_for('hr_employees_export_pdf', q=request.args.get('q', '')) }}" class="btn btn-outline-danger ms-2"><i class="fas fa-file-pdf me-1"></i>Export PDF</a>
       </form>
       <div class="table-responsive">

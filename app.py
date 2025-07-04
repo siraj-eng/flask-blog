@@ -14,10 +14,13 @@ from reportlab.pdfgen import canvas
 from reportlab.lib import colors
 from reportlab.platypus import Table, TableStyle, SimpleDocTemplate
 import io
+import time
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 app.config['SECRET_KEY'] = 'b6cf94b299a1f56d63199b2298f7095c3ee344bd1bb1a77cfd6e03d4a2b95b71'
 app.config['DATABASE'] = 'hr_system.db'
+app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 
 socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
 
@@ -361,26 +364,39 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
+    total_start = time.time()
     with get_db() as db:
+        t1 = time.time()
         announcements = db.execute(
             'SELECT a.*, u.full_name as author_name FROM announcements a JOIN users u ON a.author_id = u.id ORDER BY a.created_at DESC LIMIT 5'
         ).fetchall()
-        # Count open complaints for this user
+        print('Announcements query took', time.time() - t1, 'seconds')
+        t2 = time.time()
         complaints_count = db.execute(
             'SELECT COUNT(*) FROM complaints WHERE user_id = ? AND status = "pending"',
             (session['user_id'],)
         ).fetchone()[0]
-        # Count open repairs for this user
+        print('Complaints count query took', time.time() - t2, 'seconds')
+        t3 = time.time()
         repairs_count = db.execute(
             'SELECT COUNT(*) FROM repairs WHERE user_id = ? AND status = "pending"',
             (session['user_id'],)
         ).fetchone()[0]
-        # Count unread notifications for this user
+        print('Repairs count query took', time.time() - t3, 'seconds')
+        t4 = time.time()
         unread_notifications = db.execute(
             'SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0',
             (session['user_id'],)
         ).fetchone()[0]
-    return render_template('user/dashboard.html', announcements=announcements, complaints_count=complaints_count, repairs_count=repairs_count, unread_notifications=unread_notifications)
+        print('Notifications count query took', time.time() - t4, 'seconds')
+        today = time.strftime('%Y-%m-%d')
+        lunch_orders = db.execute(
+            'SELECT * FROM lunch_orders WHERE user_id = ? ORDER BY created_at DESC LIMIT 5',
+            (session['user_id'],)
+        ).fetchall()
+        today_menu = db.execute('SELECT * FROM lunch_menus WHERE date = ?', (today,)).fetchone()
+    print('Total dashboard route time:', time.time() - total_start, 'seconds')
+    return render_template('user/dashboard.html', announcements=announcements, complaints_count=complaints_count, repairs_count=repairs_count, unread_notifications=unread_notifications, lunch_orders=lunch_orders, today_str=today, today_menu=today_menu)
 
 # Admin Section
 @app.route('/admin/dashboard')
@@ -484,12 +500,22 @@ def hr_dashboard():
 @app.route('/submit_lunch_order', methods=['POST'])
 @login_required
 def submit_lunch_order():
-    dish = request.form.get('dish', '').strip()
+    main_menu = request.form.get('main_menu', '').strip()
+    accompaniment = request.form.get('accompaniment', '').strip()
     notes = request.form.get('notes', '').strip()
-    if not dish:
-        flash('Please enter your lunch order.', 'danger')
+    if not main_menu:
+        flash('Please enter your main menu item.', 'danger')
         return redirect(url_for('dashboard'))
+    today = datetime.now().strftime('%Y-%m-%d')
     with get_db() as db:
+        existing = db.execute(
+            'SELECT id FROM lunch_orders WHERE user_id = ? AND DATE(created_at) = ?',
+            (session['user_id'], today)
+        ).fetchone()
+        if existing:
+            flash('You have already ordered lunch today.', 'warning')
+            return redirect(url_for('dashboard'))
+        dish = f"Main: {main_menu}; Accompaniment: {accompaniment}"
         db.execute(
             'INSERT INTO lunch_orders (user_id, dish, notes) VALUES (?, ?, ?)',
             (session['user_id'], dish, notes)
@@ -594,7 +620,7 @@ def load_notifications():
 @app.route('/chat')
 @login_required
 def chat():
-    return render_template('user/chat.html')
+    return render_template('user/chat.html', current_username=session.get('full_name', session.get('username')))
 
 # SocketIO event for sending/receiving messages
 online_users = set()
@@ -646,6 +672,17 @@ def handle_send_message(data):
         emit('receive_message', {'username': username, 'message': message}, room=room)
     else:
         emit('receive_message', {'username': username, 'message': message}, broadcast=True)
+
+@socketio.on('delete_message')
+def handle_delete_message(data):
+    message_id = data.get('message_id')
+    user_id = session.get('user_id')
+    with get_db() as db:
+        msg = db.execute('SELECT * FROM chat_messages WHERE id = ?', (message_id,)).fetchone()
+        if msg and msg['user_id'] == user_id:
+            db.execute('DELETE FROM chat_messages WHERE id = ?', (message_id,))
+            db.commit()
+            emit('message_deleted', {'message_id': message_id}, broadcast=True)
 
 @app.route('/search')
 @login_required
@@ -1151,6 +1188,41 @@ def hr_download_lunch_orders():
         mimetype='text/csv',
         headers={'Content-Disposition': f'attachment;filename=lunch_orders_{today}.csv'}
     )
+
+UPLOAD_FOLDER = os.path.join('static', 'uploads')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/hr/lunch_menu', methods=['GET', 'POST'])
+@hr_required
+def hr_lunch_menu():
+    today = datetime.now().strftime('%Y-%m-%d')
+    with get_db() as db:
+        menu = db.execute('SELECT * FROM lunch_menus WHERE date = ?', (today,)).fetchone()
+        if request.method == 'POST':
+            main_menu = request.form.get('main_menu', '').strip()
+            accompaniment = request.form.get('accompaniment', '').strip()
+            notes = request.form.get('notes', '').strip()
+            image_url = request.form.get('image_url', '').strip()
+            file = request.files.get('image_file')
+            if file and allowed_file(file.filename):
+                filename = secure_filename(f"{today}_" + file.filename)
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                image_url = url_for('static', filename=f'uploads/{filename}')
+            if menu:
+                db.execute('UPDATE lunch_menus SET main_menu=?, accompaniment=?, image_url=?, notes=? WHERE date=?',
+                           (main_menu, accompaniment, image_url, notes, today))
+                flash('Today\'s menu updated!', 'success')
+            else:
+                db.execute('INSERT INTO lunch_menus (date, main_menu, accompaniment, image_url, notes) VALUES (?, ?, ?, ?, ?)',
+                           (today, main_menu, accompaniment, image_url, notes))
+                flash('Today\'s menu posted!', 'success')
+            db.commit()
+            return redirect(url_for('hr_lunch_menu'))
+    return render_template('hr/lunch_menu.html', menu=menu, today=today)
 
 if __name__ == '__main__':
     # Create required directories if they don't exist

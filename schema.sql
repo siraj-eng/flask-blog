@@ -48,3 +48,12 @@
         FOREIGN KEY (user_id) REFERENCES users (id)
     );
     
+    CREATE TABLE IF NOT EXISTS lunch_menus (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date TEXT NOT NULL UNIQUE,
+        main_menu TEXT NOT NULL,
+        accompaniment TEXT,
+        image_url TEXT,
+        notes TEXT
+    );
+    

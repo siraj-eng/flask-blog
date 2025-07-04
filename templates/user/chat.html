@@ -652,6 +652,10 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
     <script>
+        // Get the current username and user ID from Flask
+        const CURRENT_USERNAME = "{{ current_username }}";
+        const CURRENT_USER_ID = "{{ current_user_id }}";
+
         // Hide loading overlay when page loads
         window.addEventListener('load', function() {
             const overlay = document.getElementById('loadingOverlay');
@@ -707,10 +711,8 @@
         function addMessage(data) {
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message';
-            
             const initials = getInitials(data.username || 'User');
             const timestamp = formatTime(data.created_at);
-            
             messageDiv.innerHTML = `
                 <div class="message-avatar">${initials}</div>
                 <div class="message-content">
@@ -719,14 +721,11 @@
                     ${timestamp ? `<div class="message-time">${timestamp}</div>` : ''}
                 </div>
             `;
-            
             chatMessages.appendChild(messageDiv);
-            
             // Auto-scroll to bottom
             setTimeout(() => {
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             }, 100);
-            
             // Show toast for new messages
             if (data.username !== 'System') {
                 showToast(`New message from ${data.username}`);
@@ -783,7 +782,7 @@
             
             if (message) {
                 socket.emit('send_message', {
-                    username: 'Current User', // Replace with actual username
+                    username: CURRENT_USERNAME,
                     message: message
                 });
                 chatInput.value = '';
@@ -801,7 +800,7 @@
             if (!isTyping) {
                 socket.emit('typing', { 
                     typing: true,
-                    username: 'Current User'
+                    username: CURRENT_USERNAME
                 });
                 isTyping = true;
             }
@@ -815,36 +814,6 @@
 
         // Auto-focus input
         chatInput.focus();
-
-        // Add some demo messages for better visualization
-        setTimeout(() => {
-            addMessage({
-                username: 'System',
-                message: 'Welcome to SoftNet Internal Chat! 🚀',
-                created_at: new Date().toISOString()
-            });
-        }, 1000);
-
-        setTimeout(() => {
-            addMessage({
-                username: 'John Doe',
-                message: 'Hey everyone! How\'s the project coming along?',
-                created_at: new Date().toISOString()
-            });
-        }, 2000);
-
-        setTimeout(() => {
-            addMessage({
-                username: 'Sarah Johnson',
-                message: 'Great progress on the frontend! The new UI looks amazing. 👍',
-                created_at: new Date().toISOString()
-            });
-        }, 3000);
-
-        // Demo users
-        setTimeout(() => {
-            updateUserList(['John Doe', 'Sarah Johnson', 'Mike Wilson', 'Emma Davis']);
-        }, 1500);
 
         // Add intersection observer for animations
         const observerOptions = {
