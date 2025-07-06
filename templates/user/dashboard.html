@@ -4,545 +4,779 @@
 
 {% block content %}
 <style>
+    /* Dashboard Layout */
     .dashboard-container {
         display: flex;
         min-height: 100vh;
+        background-color: var(--bg-primary);
     }
 
     /* Modern Sidebar */
     .sidebar {
         width: 280px;
-        background: linear-gradient(180deg, var(--secondary-dark) 0%, var(--primary-dark) 100%);
-        padding: 2rem 1.5rem;
+        background: var(--bg-secondary);
         border-right: 1px solid var(--border-color);
-        position: relative;
-        overflow: hidden;
-        transition: all 0.3s ease;
+        padding: 0;
+        position: fixed;
+        height: 100vh;
+        overflow-y: auto;
+        z-index: 1000;
+        box-shadow: var(--shadow-md);
     }
 
-    .sidebar::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, var(--primary-green), var(--light-green), var(--dark-green));
-        background-size: 200% 100%;
-        animation: gradientShift 3s ease-in-out infinite;
-    }
-
-    @keyframes gradientShift {
-        0%, 100% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
+    .sidebar-header {
+        padding: 32px 24px;
+        border-bottom: 1px solid var(--border-color);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
     }
 
     .logo {
         display: flex;
         align-items: center;
-        gap: 12px;
-        margin-bottom: 3rem;
-        padding: 1rem;
-        background: rgba(34, 197, 94, 0.1);
-        border-radius: 12px;
-        border: 1px solid var(--border-color);
-        position: relative;
-        overflow: hidden;
+        gap: 16px;
+        font-size: 32px;
+        font-weight: 900;
+        color: var(--primary-color);
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
 
-    .logo::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.2), transparent);
-        animation: logoShine 3s ease-in-out infinite;
-    }
-
-    @keyframes logoShine {
-        0%, 100% { left: -100%; }
-        50% { left: 100%; }
-    }
-
-    .logo i {
-        font-size: 2rem;
-        color: var(--primary-green);
-        animation: pulse 2s infinite;
-        z-index: 1;
-    }
-
-    @keyframes pulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.1); }
-    }
-
-    .logo h5 {
-        color: var(--primary-green);
-        font-weight: 700;
-        font-size: 1.2rem;
-        z-index: 1;
-    }
-
-    .sidebar-menu {
-        list-style: none;
-    }
-
-    .sidebar-menu li {
-        margin-bottom: 0.5rem;
-    }
-
-    .sidebar-menu a {
+    .logo-icon {
+        width: 48px;
+        height: 48px;
+        background: var(--primary-color);
+        border-radius: var(--radius-lg);
         display: flex;
         align-items: center;
-        padding: 1rem 1.5rem;
+        justify-content: center;
+        font-size: 24px;
+        color: white;
+    }
+
+    .sidebar-nav {
+        padding: 24px 0;
+    }
+
+    .nav-section {
+        margin-bottom: 24px;
+    }
+
+    .nav-section-title {
+        font-size: 12px;
+        font-weight: 600;
         color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+        padding: 0 24px;
+    }
+
+    .nav-item {
+        margin-bottom: 4px;
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 24px;
+        color: var(--text-secondary);
         text-decoration: none;
-        border-radius: 12px;
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
+        transition: all 0.2s ease;
+        font-size: 14px;
+        font-weight: 500;
+        border-left: 3px solid transparent;
     }
 
-    .sidebar-menu a::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.1), transparent);
-        transition: left 0.5s ease;
+    .nav-link:hover {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+        border-left-color: var(--primary-color);
     }
 
-    .sidebar-menu a:hover::before {
-        left: 100%;
+    .nav-link.active {
+        background: rgba(80, 72, 229, 0.05);
+        color: var(--primary-color);
+        border-left-color: var(--primary-color);
+        font-weight: 600;
     }
 
-    .sidebar-menu a:hover,
-    .sidebar-menu a.active {
-        background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
-        color: var(--primary-green);
-        transform: translateX(8px);
-        border-left: 4px solid var(--primary-green);
-        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
-    }
-
-    .sidebar-menu a i {
-        font-size: 1.2rem;
-        margin-right: 1rem;
+    .nav-link i {
         width: 20px;
-        transition: transform 0.3s ease;
-    }
-
-    .sidebar-menu a:hover i {
-        transform: scale(1.2) rotate(5deg);
+        text-align: center;
+        font-size: 18px;
     }
 
     /* Main Content */
     .main-content {
         flex: 1;
-        padding: 2rem;
-        background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.8) 100%);
+        margin-left: 280px;
+        padding: 32px;
+        background-color: var(--bg-primary);
+        min-height: 100vh;
     }
 
+    .form-card,
+    .content-section {
+        max-width: none;
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    /* Header */
     .header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 2rem;
-        padding: 1.5rem 2rem;
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.8));
-        border-radius: 16px;
+        margin-bottom: 32px;
+        padding: 24px;
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
         border: 1px solid var(--border-color);
-        backdrop-filter: blur(10px);
+        box-shadow: var(--shadow-sm);
     }
 
-    .header h2 {
-        font-size: 2rem;
+    .header-title h1 {
+        font-size: 28px;
         font-weight: 700;
-        background: linear-gradient(135deg, var(--primary-green), var(--light-green));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        color: var(--text-primary);
+        margin: 0;
     }
 
-    .header .user-info {
+    .header-title p {
+        font-size: 16px;
+        color: var(--text-secondary);
+        margin-top: 8px;
+        margin-bottom: 0;
+    }
+
+    .user-profile {
         display: flex;
         align-items: center;
-        gap: 1rem;
+        gap: 12px;
+        padding: 12px 16px;
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
     }
 
-    .avatar {
-        width: 50px;
-        height: 50px;
-        background: linear-gradient(135deg, var(--primary-green), var(--dark-green));
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, var(--primary-color), #4338CA);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
+        font-size: 16px;
+        font-weight: 600;
         color: white;
-        font-weight: bold;
-        animation: avatarGlow 2s ease-in-out infinite alternate;
     }
 
-    @keyframes avatarGlow {
-        0% { box-shadow: 0 0 10px rgba(34, 197, 94, 0.3); }
-        100% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.6); }
+    .user-info h4 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
     }
 
-    /* Widgets Grid */
-    .widgets-grid {
+    .user-info p {
+        margin: 0;
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+
+    /* Stats Cards */
+    .stats-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
-        margin-bottom: 2rem;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
     }
 
-    .widget {
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.8));
-        padding: 2rem;
-        border-radius: 16px;
+    .stat-card {
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        padding: 24px;
         border: 1px solid var(--border-color);
-        text-align: center;
+        transition: all 0.2s ease;
         position: relative;
         overflow: hidden;
-        transition: all 0.3s ease;
-        backdrop-filter: blur(10px);
+        box-shadow: var(--shadow-sm);
     }
 
-    .widget::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, var(--primary-green), var(--light-green));
-        transform: scaleX(0);
-        transition: transform 0.3s ease;
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
     }
 
-    .widget:hover::before {
-        transform: scaleX(1);
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 16px;
     }
 
-    .widget:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 20px 40px rgba(34, 197, 94, 0.2);
-        border-color: var(--primary-green);
-    }
-
-    .widget-icon {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        background: linear-gradient(135deg, var(--primary-green), var(--light-green));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        animation: iconFloat 3s ease-in-out infinite;
-    }
-
-    @keyframes iconFloat {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-10px); }
-    }
-
-    .widget h3 {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: var(--primary-green);
-        margin-bottom: 0.5rem;
-        counter-reset: count;
-        animation: countUp 2s ease-out;
-    }
-
-    @keyframes countUp {
-        from { opacity: 0; transform: scale(0.5); }
-        to { opacity: 1; transform: scale(1); }
-    }
-
-    .widget p {
-        color: var(--text-muted);
+    .stat-title {
+        font-size: 14px;
+        color: var(--text-secondary);
         font-weight: 500;
     }
 
-    /* Lunch Order Section */
-    .lunch-section {
-        margin-bottom: 2rem;
-    }
-
-    .lunch-form {
-        background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05));
-        padding: 2rem;
-        border-radius: 16px;
-        border: 1px solid var(--border-color);
-    }
-
-    .lunch-form h5 {
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--radius-md);
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 1.5rem;
-        color: var(--primary-green);
-        font-size: 1.3rem;
+        justify-content: center;
+        font-size: 20px;
+        color: white;
+        background: linear-gradient(135deg, var(--primary-color), #4338CA);
+    }
+
+    .stat-value {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 8px 0 4px;
+    }
+
+    .stat-change {
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .stat-change.positive {
+        color: var(--success-color);
+    }
+
+    .stat-change.negative {
+        color: var(--danger-color);
+    }
+
+    /* Content Sections */
+    .content-section {
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 32px;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .section-title {
+        font-size: 18px;
         font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
     }
 
-    .lunch-form i {
-        font-size: 1.5rem;
-        animation: bounce 2s infinite;
+    .section-title i {
+        margin-right: 12px;
+        color: var(--primary-color);
     }
 
-    @keyframes bounce {
-        0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-        40% { transform: translateY(-10px); }
-        60% { transform: translateY(-5px); }
+    /* Menu Card */
+    .menu-card {
+        display: flex;
+        gap: 24px;
+        margin-bottom: 24px;
     }
 
-    /* Announcements Section */
-    .announcements-section .card-header {
-        background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05));
-    }
-
-    .announcement-item {
-        padding: 1.5rem;
-        border-left: 4px solid var(--primary-green);
-        margin-bottom: 1rem;
-        background: rgba(30, 41, 59, 0.3);
-        border-radius: 0 12px 12px 0;
-        transition: all 0.3s ease;
-        position: relative;
+    .menu-image {
+        flex: 0 0 200px;
+        height: 150px;
+        border-radius: var(--radius-md);
         overflow: hidden;
+        background: var(--bg-tertiary);
     }
 
-    .announcement-item::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
+    .menu-image img {
         width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.1), transparent);
-        transition: left 0.5s ease;
+        object-fit: cover;
     }
 
-    .announcement-item:hover::before {
-        left: 100%;
+    .menu-details {
+        flex: 1;
+    }
+
+    .menu-details h5 {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 12px;
+    }
+
+    .menu-item {
+        margin-bottom: 8px;
+    }
+
+    .menu-item strong {
+        color: var(--text-primary);
+    }
+
+    /* Form Styles */
+    .form-card {
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 32px;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: var(--text-primary);
+        font-size: 14px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        font-size: 14px;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(80, 72, 229, 0.15);
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 20px;
+        border: none;
+        border-radius: var(--radius-md);
+        font-weight: 500;
+        font-size: 14px;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .btn:hover {
+        background: #4338CA;
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .btn i {
+        font-size: 16px;
+    }
+
+    /* Announcements */
+    .announcement-item {
+        padding: 16px;
+        margin-bottom: 16px;
+        background: var(--bg-tertiary);
+        border-radius: var(--radius-md);
+        border-left: 4px solid var(--primary-color);
+        transition: all 0.2s ease;
     }
 
     .announcement-item:hover {
-        transform: translateX(10px);
-        background: rgba(34, 197, 94, 0.1);
+        transform: translateX(4px);
+        box-shadow: var(--shadow-sm);
     }
 
     .announcement-title {
-        color: var(--primary-green);
         font-weight: 600;
-        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+        margin-bottom: 8px;
     }
 
     .announcement-meta {
         display: flex;
         justify-content: space-between;
         color: var(--text-muted);
-        font-size: 0.875rem;
-        margin-bottom: 1rem;
+        font-size: 12px;
+        margin-bottom: 12px;
     }
 
     .announcement-content {
-        color: var(--text-light);
+        color: var(--text-secondary);
         line-height: 1.6;
-        margin-bottom: 1rem;
+        margin-bottom: 12px;
     }
 
-    /* Mobile Responsiveness */
-    @media (max-width: 768px) {
-        .dashboard-container {
-            flex-direction: column;
-        }
-        
+    .btn-sm {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+
+    /* Alerts */
+    .alert {
+        padding: 16px;
+        border-radius: var(--radius-md);
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .alert-success {
+        background: rgba(16, 185, 129, 0.1);
+        border-left: 4px solid var(--success-color);
+        color: var(--text-primary);
+    }
+
+    .alert-warning {
+        background: rgba(245, 158, 11, 0.1);
+        border-left: 4px solid var(--warning-color);
+        color: var(--text-primary);
+    }
+
+    .alert-info {
+        background: rgba(59, 130, 246, 0.1);
+        border-left: 4px solid var(--info-color);
+        color: var(--text-primary);
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
         .sidebar {
-            width: 100%;
-            position: fixed;
-            left: -100%;
-            z-index: 1000;
-            transition: left 0.3s ease;
-        }
-        
-        .sidebar.active {
-            left: 0;
+            width: 240px;
         }
         
         .main-content {
-            padding: 1rem;
+            margin-left: 240px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .sidebar {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
         }
         
-        .widgets-grid {
+        .sidebar.active {
+            transform: translateX(0);
+        }
+        
+        .main-content {
+            margin-left: 0;
+            padding: 24px;
+        }
+        
+        .stats-grid {
             grid-template-columns: 1fr;
-            gap: 1rem;
         }
         
         .header {
             flex-direction: column;
-            gap: 1rem;
-            text-align: center;
+            align-items: flex-start;
+            gap: 16px;
+        }
+        
+        .menu-card {
+            flex-direction: column;
+        }
+        
+        .menu-image {
+            flex: 0 0 auto;
+            width: 100%;
+            height: 200px;
+        }
+        .form-card,
+        .content-section {
+            max-width: 100%;
         }
     }
 </style>
 
 <div class="dashboard-container">
-    <div class="sidebar">
-        <div class="logo">
-            <i class="fas fa-building"></i>
-            <h5>SoftNet Internal</h5>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo" style="font-family: 'Montserrat', sans-serif;">
+                TeamSync
+            </div>
         </div>
-        <ul class="sidebar-menu">
-            <li><a href="{{ url_for('dashboard') }}" class="active"><i class="fas fa-tachometer-alt"></i>Dashboard</a></li>
-            <li><a href="{{ url_for('user_complaints') }}"><i class="fas fa-exclamation-triangle"></i>Complaints</a></li>
-            <li><a href="{{ url_for('user_repairs') }}"><i class="fas fa-tools"></i>Repairs</a></li>
-            <li><a href="{{ url_for('user_events') }}"><i class="fas fa-calendar-alt"></i>Events</a></li>
-            <li><a href="{{ url_for('chat') }}"><i class="fas fa-comments"></i>Chat</a></li>
-            <li><a href="{{ url_for('user_settings') }}"><i class="fas fa-cog"></i>Settings</a></li>
-            <li class="mt-4"><a href="{{ url_for('logout') }}" class="text-danger"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
-        </ul>
-    </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Navigation</div>
+                <ul>
+                    <li class="nav-item">
+                        <a href="{{ url_for('dashboard') }}" class="nav-link active">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('user_complaints') }}" class="nav-link">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>Complaints</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('user_repairs') }}" class="nav-link">
+                            <i class="fas fa-tools"></i>
+                            <span>Repairs</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('user_events') }}" class="nav-link">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Events</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('chat') }}" class="nav-link">
+                            <i class="fas fa-comments"></i>
+                            <span>Chat</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">Account</div>
+                <ul>
+                    <li class="nav-item">
+                        <a href="{{ url_for('user_settings') }}" class="nav-link">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('logout') }}" class="nav-link">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </aside>
     
-    <div class="main-content">
-        <div class="alert alert-success text-center mb-4" style="font-size:1.25rem; font-weight:600;">
-            Welcome to SoftNet Internal by System Administration J.Motanya
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Welcome Alert -->
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i>
+            <div>
+                <strong>Welcome to TeamSync</strong> by System Administration J.Motanya
+            </div>
         </div>
+        
+        <!-- Header -->
         <div class="header">
-            <h2 style="margin-bottom: 2rem;">Welcome back, {{ session.get('full_name', session.get('username')) }}</h2>
-            <div class="user-info">
-                <div class="avatar">{{ session.get('full_name', session.get('username'))[0].upper() if session.get('full_name', session.get('username')) else 'U' }}</div>
-                <div>
-                    <div class="text-muted">Last login: Today</div>
-                    <div style="font-size: 0.875rem; color: var(--primary-green);">Online</div>
+            <div class="header-title">
+                <h1>Welcome back, {{ session.get('full_name', session.get('username')) }}</h1>
+                <p>Check your daily updates and activities</p>
+            </div>
+            
+            <div class="user-profile">
+                <div class="user-avatar">{{ session.get('full_name', session.get('username'))[0].upper() if session.get('full_name', session.get('username')) else 'U' }}</div>
+                <div class="user-info">
+                    <h4>{{ session.get('full_name', session.get('username')) }}</h4>
+                    <p>Last login: Today</p>
                 </div>
             </div>
         </div>
 
-        <div class="widgets-grid">
-            <div class="widget">
-                <i class="fas fa-exclamation-triangle widget-icon"></i>
-                <h3 id="complaintsCount">{{ complaints_count or 0 }}</h3>
-                <p>Open Complaints</p>
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-title">Open Complaints</div>
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="complaintsCount">{{ complaints_count or 0 }}</div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>From last week</span>
+                </div>
             </div>
-            <div class="widget">
-                <i class="fas fa-tools widget-icon"></i>
-                <h3 id="repairsCount">{{ repairs_count or 0 }}</h3>
-                <p>Pending Repairs</p>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-title">Pending Repairs</div>
+                    <div class="stat-icon">
+                        <i class="fas fa-tools"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="repairsCount">{{ repairs_count or 0 }}</div>
+                <div class="stat-change negative">
+                    <i class="fas fa-arrow-down"></i>
+                    <span>From last week</span>
+                </div>
             </div>
-            <div class="widget">
-                <i class="fas fa-bell widget-icon"></i>
-                <h3 id="notificationsCount">{{ unread_notifications or 0 }}</h3>
-                <p>New Notifications</p>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-title">Notifications</div>
+                    <div class="stat-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="notificationsCount">{{ unread_notifications or 0 }}</div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>From yesterday</span>
+                </div>
             </div>
         </div>
 
+        <!-- Order Status Alerts -->
         {% for order in lunch_orders %}
             {% if order.created_at[:10] == today_str %}
                 {% if order.status == 'pending' %}
-                    <div class="alert alert-warning text-center mb-3">
-                        <i class="fas fa-hourglass-half"></i> Your order has been <strong>sent</strong> and is awaiting processing.
+                    <div class="alert alert-warning">
+                        <i class="fas fa-hourglass-half"></i>
+                        <div>
+                            <strong>Order Status</strong> - Your order has been <strong>sent</strong> and is awaiting processing.
+                        </div>
                     </div>
                 {% elif order.status in ['received', 'completed'] %}
-                    <div class="alert alert-info text-center mb-3">
-                        <i class="fas fa-check-circle"></i> Your order has been <strong>received</strong> and it is being processed.
+                    <div class="alert alert-info">
+                        <i class="fas fa-check-circle"></i>
+                        <div>
+                            <strong>Order Status</strong> - Your order has been <strong>received</strong> and is being processed.
+                        </div>
                     </div>
                 {% endif %}
             {% endif %}
         {% endfor %}
 
         {% if not today_menu %}
-        <div class="alert alert-warning text-center mb-4">
-            <i class="fas fa-info-circle"></i> No lunch menu has been posted for today yet. Please check back later.
+        <div class="alert alert-warning">
+            <i class="fas fa-info-circle"></i>
+            <div>
+                <strong>No Menu Posted</strong> - No lunch menu has been posted for today yet. Please check back later.
+            </div>
         </div>
         {% endif %}
 
+        <!-- Today's Menu -->
         {% if today_menu %}
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5><i class="fas fa-utensils"></i> Today's Menu</h5>
+        <div class="content-section" style="max-width:none;width:100%;margin-left:0;margin-right:0;">
+            <div class="section-header">
+                <h2 class="section-title"><i class="fas fa-utensils"></i> Today's Menu</h2>
             </div>
-            <div class="card-body">
+            <div class="menu-card">
                 {% if today_menu.image_url %}
-                    <img src="{{ today_menu.image_url }}" alt="Menu Image" style="max-width: 300px; max-height: 200px; margin-bottom: 1rem;">
-                {% endif %}
-                <div><strong>Main Menu:</strong> {{ today_menu.main_menu }}</div>
-                {% if today_menu.accompaniment %}
-                    <div><strong>Accompaniment:</strong> {{ today_menu.accompaniment }}</div>
-                {% endif %}
-                {% if today_menu.notes %}
-                    <div><strong>Notes:</strong> {{ today_menu.notes }}</div>
-                {% endif %}
-            </div>
-        </div>
-        {% endif %}
-
-        <div class="lunch-section">
-            <div class="card">
-                <div class="card-header">
-                    <h5><i class="fas fa-utensils"></i>Daily Lunch Order</h5>
+                <div class="menu-image">
+                    <img src="{{ today_menu.image_url }}" alt="Menu Image">
                 </div>
-                <div class="card-body">
-                    <form method="POST" enctype="multipart/form-data">
-                        <div class="form-group">
-                            <label for="main_menu" class="form-label">Main Menu</label>
-                            <input type="text" class="form-control" id="main_menu" name="main_menu" placeholder="Enter main menu item..." required>
-                        </div>
-                        <div class="form-group">
-                            <label for="accompaniment" class="form-label">Accompaniment</label>
-                            <input type="text" class="form-control" id="accompaniment" name="accompaniment" placeholder="Enter accompaniment...">
-                        </div>
-                        <div class="form-group">
-                            <label for="notes" class="form-label">Special Instructions</label>
-                            <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Any dietary restrictions or special requests?"></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-paper-plane"></i>
-                            Submit Order
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="announcements-section">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5><i class="fas fa-bullhorn"></i>Latest Announcements</h5>
-                    <a href="#" class="btn btn-secondary btn-sm">View All</a>
-                </div>
-                <div class="card-body">
-                    {% if announcements %}
-                        {% for announcement in announcements %}
-                        <div class="announcement-item">
-                            <div class="announcement-title">{{ announcement.title }}</div>
-                            <div class="announcement-meta">
-                                <span><i class="fas fa-user"></i> {{ announcement.author_name }}</span>
-                                <span><i class="fas fa-calendar"></i> {{ announcement.created_at[:10] }}</span>
-                            </div>
-                            <div class="announcement-content">{{ announcement.content[:150] }}...</div>
-                            <a href="{{ url_for('view_announcement', announcement_id=announcement.id) }}" class="btn btn-primary btn-sm">
-                                <i class="fas fa-arrow-right"></i>
-                                Read More
-                            </a>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="text-center text-muted" style="padding: 3rem;">
-                            <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
-                            <p>No announcements yet. Check back later!</p>
-                        </div>
+                {% endif %}
+                <div class="menu-details">
+                    <h5>Today's Special</h5>
+                    <div class="menu-item">
+                        <strong>Main Menu:</strong> {{ today_menu.main_menu }}
+                    </div>
+                    {% if today_menu.accompaniment %}
+                    <div class="menu-item">
+                        <strong>Accompaniment:</strong> {{ today_menu.accompaniment }}
+                    </div>
+                    {% endif %}
+                    {% if today_menu.notes %}
+                    <div class="menu-item">
+                        <strong>Notes:</strong> {{ today_menu.notes }}
+                    </div>
                     {% endif %}
                 </div>
             </div>
         </div>
-    </div>
+        {% endif %}
+
+        <!-- Lunch Order Form -->
+        <div class="form-card" style="max-width:none;width:100%;margin-left:0;margin-right:0;">
+            <div class="section-header">
+                <h2 class="section-title"><i class="fas fa-utensils"></i> Daily Lunch Order</h2>
+            </div>
+            <form method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="main_menu" class="form-label">Main Menu</label>
+                    <input type="text" class="form-control" id="main_menu" name="main_menu" placeholder="Enter main menu item..." required>
+                </div>
+                <div class="form-group">
+                    <label for="accompaniment" class="form-label">Accompaniment</label>
+                    <input type="text" class="form-control" id="accompaniment" name="accompaniment" placeholder="Enter accompaniment...">
+                </div>
+                <div class="form-group">
+                    <label for="notes" class="form-label">Special Instructions</label>
+                    <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Any dietary restrictions or special requests?"></textarea>
+                </div>
+                <button type="submit" class="btn">
+                    <i class="fas fa-paper-plane"></i>
+                    Submit Order
+                </button>
+            </form>
+        </div>
+
+        <!-- Announcements -->
+        <div class="content-section" style="max-width:none;width:100%;margin-left:0;margin-right:0;">
+            <div class="section-header">
+                <h2 class="section-title"><i class="fas fa-bullhorn"></i> Latest Announcements</h2>
+                <a href="#" class="btn btn-sm">View All</a>
+            </div>
+            <div>
+                {% if announcements %}
+                    {% for announcement in announcements %}
+                    <div class="announcement-item">
+                        <div class="announcement-title">{{ announcement.title }}</div>
+                        <div class="announcement-meta">
+                            <span><i class="fas fa-user"></i> {{ announcement.author_name }}</span>
+                            <span><i class="fas fa-calendar"></i> {{ announcement.created_at[:10] }}</span>
+                        </div>
+                        <div class="announcement-content">{{ announcement.content[:150] }}...</div>
+                        <a href="{{ url_for('view_announcement', announcement_id=announcement.id) }}" class="btn btn-sm">
+                            <i class="fas fa-arrow-right"></i>
+                            Read More
+                        </a>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center" style="padding: 3rem; color: var(--text-muted);">
+                        <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                        <p>No announcements yet. Check back later!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
 </div>
 
 <script>

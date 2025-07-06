@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, g, make_response
+from flask import Flask, render_template, request, redirect, url_for, flash, session, g, make_response, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 import os
@@ -92,6 +92,7 @@ def init_db():
             user_id INTEGER NOT NULL,
             username TEXT NOT NULL,
             message TEXT NOT NULL,
+            file_url TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users (id)
         )''')
@@ -142,6 +143,17 @@ def init_db():
             event_date DATE NOT NULL,
             location TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )''')
+        
+        # Add lunch_menus table
+        db.execute('''
+        CREATE TABLE lunch_menus (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date TEXT NOT NULL UNIQUE,
+            main_menu TEXT NOT NULL,
+            accompaniment TEXT,
+            image_url TEXT,
+            notes TEXT
         )''')
         
         # Insert default admin user
@@ -662,16 +674,20 @@ def handle_leave_room(data):
 def handle_send_message(data):
     username = data.get('username')
     message = data.get('message')
+    file_url = data.get('file_url')
     user_id = session.get('user_id')
     room = data.get('room')
     # Store message in DB (public room for now)
     with get_db() as db:
-        db.execute('INSERT INTO chat_messages (user_id, username, message) VALUES (?, ?, ?)', (user_id, username, message))
+        db.execute('INSERT INTO chat_messages (user_id, username, message, file_url) VALUES (?, ?, ?, ?)', (user_id, username, message, file_url))
         db.commit()
+    payload = {'username': username, 'message': message}
+    if file_url:
+        payload['file_url'] = file_url
     if room:
-        emit('receive_message', {'username': username, 'message': message}, room=room)
+        emit('receive_message', payload, room=room)
     else:
-        emit('receive_message', {'username': username, 'message': message}, broadcast=True)
+        emit('receive_message', payload, broadcast=True)
 
 @socketio.on('delete_message')
 def handle_delete_message(data):
@@ -1223,6 +1239,21 @@ def hr_lunch_menu():
             db.commit()
             return redirect(url_for('hr_lunch_menu'))
     return render_template('hr/lunch_menu.html', menu=menu, today=today)
+
+@app.route('/chat/upload_file', methods=['POST'])
+@login_required
+def chat_upload_file():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        file_url = url_for('static', filename=f'uploads/{filename}')
+        return jsonify({'file_url': file_url}), 200
+    return jsonify({'error': 'Invalid file type'}), 400
 
 if __name__ == '__main__':
     # Create required directories if they don't exist
