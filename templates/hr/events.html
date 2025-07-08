@@ -1,79 +1,282 @@
 {% extends 'base.html' %}
 {% block title %}HR Events - SoftNet Internal{% endblock %}
 {% block content %}
-<div class="container py-4">
-  <div class="mb-3">
-    <a href="{{ url_for('hr_dashboard') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>Back to Dashboard</a>
-  </div>
-  <div class="row">
-    <div class="col-md-5">
-      <div class="card shadow-sm mb-4">
-        <div class="card-header bg-orange text-white">
-          <h5 class="mb-0">Create Event</h5>
+<style>
+    .events-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        padding: 0.75rem 1.25rem;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    
+    .back-btn:hover {
+        background: var(--bg-tertiary);
+        transform: translateY(-2px);
+    }
+    
+    .events-grid {
+        display: grid;
+        grid-template-columns: 1fr 1.5fr;
+        gap: 2rem;
+    }
+    
+    .event-card {
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+    
+    .create-header {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .list-header {
+        background: var(--success-color);
+        color: white;
+    }
+    
+    .card-header {
+        padding: 1.25rem;
+    }
+    
+    .card-header h5 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+    
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        transition: all 0.2s ease;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(80, 72, 229, 0.15);
+    }
+    
+    textarea.form-control {
+        min-height: 100px;
+    }
+    
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: var(--radius-md);
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-primary {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #4338CA;
+        transform: translateY(-2px);
+    }
+    
+    .btn-danger {
+        background: var(--danger-color);
+        color: white;
+    }
+    
+    .btn-danger:hover {
+        background: #DC2626;
+        transform: translateY(-2px);
+    }
+    
+    .event-item {
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background: var(--bg-tertiary);
+        border-radius: var(--radius-md);
+        border-left: 4px solid var(--primary-color);
+    }
+    
+    .event-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .event-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .event-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+    }
+    
+    .btn-sm {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted);
+    }
+    
+    .empty-state i {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+    
+    @media (max-width: 1024px) {
+        .events-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="events-container">
+    <a href="{{ url_for('hr_dashboard') }}" class="back-btn">
+        <i class="fas fa-arrow-left"></i>
+        Back to Dashboard
+    </a>
+    
+    <div class="events-grid">
+        <!-- Create Event Card -->
+        <div class="event-card">
+            <div class="card-header create-header">
+                <h5>
+                    <i class="fas fa-calendar-plus me-2"></i>
+                    Create Event
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="form-group">
+                        <label for="title" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="title" name="title" required maxlength="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="event_date" class="form-label">Date</label>
+                        <input type="date" class="form-control" id="event_date" name="event_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="location" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="location" name="location">
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-calendar-check"></i>
+                        Create Event
+                    </button>
+                </form>
+            </div>
         </div>
-        <div class="card-body">
-          <form method="POST">
-            <div class="mb-3">
-              <label for="title" class="form-label">Title</label>
-              <input type="text" class="form-control" id="title" name="title" required maxlength="100">
+        
+        <!-- Events List Card -->
+        <div class="event-card">
+            <div class="card-header list-header">
+                <h5>
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    All Events
+                </h5>
             </div>
-            <div class="mb-3">
-              <label for="description" class="form-label">Description</label>
-              <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+            <div class="card-body">
+                {% if events %}
+                    {% for event in events %}
+                    <div class="event-item">
+                        <h4 class="event-title">{{ event.title }}</h4>
+                        <div class="event-meta">
+                            <span>
+                                <i class="far fa-calendar"></i> 
+                                {{ event.event_date }}
+                            </span>
+                            <span>
+                                <i class="fas fa-map-marker-alt"></i> 
+                                {{ event.location or 'No location' }}
+                            </span>
+                        </div>
+                        <p class="event-description">{{ event.description|truncate(100) }}</p>
+                        <div class="event-actions">
+                            <a href="{{ url_for('hr_event_edit', event_id=event.id) }}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-edit"></i>
+                                Edit
+                            </a>
+                            <form method="POST" action="{{ url_for('hr_event_delete', event_id=event.id) }}" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this event?')">
+                                    <i class="fas fa-trash"></i>
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="far fa-calendar-times"></i>
+                        <p>No events scheduled yet</p>
+                    </div>
+                {% endif %}
             </div>
-            <div class="mb-3">
-              <label for="event_date" class="form-label">Date</label>
-              <input type="date" class="form-control" id="event_date" name="event_date" required>
-            </div>
-            <div class="mb-3">
-              <label for="location" class="form-label">Location</label>
-              <input type="text" class="form-control" id="location" name="location">
-            </div>
-            <button type="submit" class="btn btn-green">Create Event</button>
-          </form>
         </div>
-      </div>
     </div>
-    <div class="col-md-7">
-      <div class="card shadow-sm mb-4">
-        <div class="card-header bg-green text-white">
-          <h5 class="mb-0">All Events</h5>
-        </div>
-        <div class="card-body">
-          {% if events %}
-          <div class="table-responsive">
-            <table class="table table-hover align-middle">
-              <thead class="table-light">
-                <tr>
-                  <th>Title</th>
-                  <th>Date</th>
-                  <th>Location</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for event in events %}
-                <tr>
-                  <td>{{ event.title }}</td>
-                  <td>{{ event.event_date }}</td>
-                  <td>{{ event.location or '-' }}</td>
-                  <td>
-                    <a href="{{ url_for('hr_event_edit', event_id=event.id) }}" class="btn btn-sm btn-primary">Edit</a>
-                    <form method="POST" action="{{ url_for('hr_event_delete', event_id=event.id) }}" style="display:inline;">
-                      <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this event?')">Delete</button>
-                    </form>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-          {% else %}
-            <p class="text-muted">No events found.</p>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
-{% endblock %} 
+
+<script>
+    // Add form submission animation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+        submitBtn.disabled = true;
+    });
+</script>
+{% endblock %}

@@ -1,44 +1,186 @@
 {% extends 'base.html' %}
 {% block title %}Repair Details - SoftNet Internal{% endblock %}
 {% block content %}
-<div class="container py-4">
-  <div class="row justify-content-center">
-    <div class="col-md-8">
-      <div class="card shadow-sm">
-        <div class="card-header bg-orange text-white">
-          <h4 class="mb-0">Repair Details</h4>
+<style>
+    .repair-detail-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .repair-card {
+        background: var(--bg-secondary);
+        border-radius: var(--radius-xl);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+    }
+    
+    .repair-header {
+        background: var(--primary-color);
+        color: white;
+        padding: 1.5rem 2rem;
+    }
+    
+    .repair-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+    }
+    
+    .repair-body {
+        padding: 2rem;
+    }
+    
+    .detail-grid {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        gap: 1.5rem 2rem;
+    }
+    
+    .detail-label {
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+    }
+    
+    .detail-value {
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
+    
+    .status-select {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .status-select select {
+        padding: 0.5rem;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-color);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+    }
+    
+    .status-update-btn {
+        padding: 0.5rem 1.25rem;
+        background: var(--success-color);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .status-update-btn:hover {
+        background: #047857;
+        transform: translateY(-1px);
+    }
+    
+    .repair-footer {
+        padding: 1.5rem 2rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: flex-end;
+    }
+    
+    .back-btn {
+        padding: 0.75rem 1.5rem;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        border-radius: var(--radius-md);
+        text-decoration: none;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .back-btn:hover {
+        background: var(--bg-tertiary);
+        transform: translateY(-2px);
+    }
+    
+    @media (max-width: 768px) {
+        .detail-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .detail-label {
+            margin-bottom: 0.25rem;
+        }
+    }
+</style>
+
+<div class="repair-detail-container">
+    <div class="repair-card">
+        <div class="repair-header">
+            <h2 class="repair-title">Repair Details</h2>
         </div>
-        <div class="card-body">
-          <dl class="row mb-0">
-            <dt class="col-sm-4">Title</dt>
-            <dd class="col-sm-8">{{ repair.title }}</dd>
-            <dt class="col-sm-4">Description</dt>
-            <dd class="col-sm-8">{{ repair.description }}</dd>
-            <dt class="col-sm-4">User</dt>
-            <dd class="col-sm-8">{{ repair.full_name or repair.username }}</dd>
-            <dt class="col-sm-4">Department</dt>
-            <dd class="col-sm-8">{{ repair.department or '-' }}</dd>
-            <dt class="col-sm-4">Status</dt>
-            <dd class="col-sm-8">
-              <form method="POST" class="d-inline">
-                <select name="status" class="form-select d-inline w-auto">
-                  <option value="pending" {% if repair.status == 'pending' %}selected{% endif %}>Pending</option>
-                  <option value="in progress" {% if repair.status == 'in progress' %}selected{% endif %}>In Progress</option>
-                  <option value="resolved" {% if repair.status == 'resolved' %}selected{% endif %}>Resolved</option>
-                  <option value="dismissed" {% if repair.status == 'dismissed' %}selected{% endif %}>Dismissed</option>
-                </select>
-                <button type="submit" class="btn btn-success btn-sm ms-2">Update</button>
-              </form>
-            </dd>
-            <dt class="col-sm-4">Date Submitted</dt>
-            <dd class="col-sm-8">{{ repair.created_at[:16] }}</dd>
-          </dl>
+        
+        <div class="repair-body">
+            <div class="detail-grid">
+                <div class="detail-label">
+                    <i class="fas fa-heading me-2"></i>
+                    Title
+                </div>
+                <div class="detail-value">{{ repair.title }}</div>
+                
+                <div class="detail-label">
+                    <i class="fas fa-align-left me-2"></i>
+                    Description
+                </div>
+                <div class="detail-value">{{ repair.description }}</div>
+                
+                <div class="detail-label">
+                    <i class="fas fa-user me-2"></i>
+                    User
+                </div>
+                <div class="detail-value">{{ repair.full_name or repair.username }}</div>
+                
+                <div class="detail-label">
+                    <i class="fas fa-building me-2"></i>
+                    Department
+                </div>
+                <div class="detail-value">{{ repair.department or '-' }}</div>
+                
+                <div class="detail-label">
+                    <i class="fas fa-calendar-day me-2"></i>
+                    Date Submitted
+                </div>
+                <div class="detail-value">{{ repair.created_at[:16] }}</div>
+                
+                <div class="detail-label">
+                    <i class="fas fa-tag me-2"></i>
+                    Status
+                </div>
+                <div class="detail-value">
+                    <form method="POST" class="status-select">
+                        <select name="status" class="form-select">
+                            <option value="pending" {% if repair.status == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="in progress" {% if repair.status == 'in progress' %}selected{% endif %}>In Progress</option>
+                            <option value="resolved" {% if repair.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                            <option value="dismissed" {% if repair.status == 'dismissed' %}selected{% endif %}>Dismissed</option>
+                        </select>
+                        <button type="submit" class="status-update-btn">
+                            <i class="fas fa-save me-1"></i>
+                            Update
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
-        <div class="card-footer text-end">
-          <a href="{{ url_for('hr_repairs') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>Back to Repairs</a>
+        
+        <div class="repair-footer">
+            <a href="{{ url_for('hr_repairs') }}" class="back-btn">
+                <i class="fas fa-arrow-left me-1"></i>
+                Back to Repairs
+            </a>
         </div>
-      </div>
     </div>
-  </div>
 </div>
-{% endblock %} 
+{% endblock %}

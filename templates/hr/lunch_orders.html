@@ -1,56 +1,249 @@
 {% extends 'base.html' %}
 {% block title %}Lunch Orders - SoftNet Internal{% endblock %}
 {% block content %}
-<div class="container py-4">
-  <div class="mb-3 d-flex justify-content-between align-items-center">
-    <a href="{{ url_for('hr_dashboard') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>Back to Dashboard</a>
-    <a href="{{ url_for('hr_download_lunch_orders') }}" class="btn btn-green"><i class="fas fa-download me-1"></i>Download CSV</a>
-  </div>
-  <div class="card shadow-sm">
-    <div class="card-header bg-orange text-white">
-      <h4 class="mb-0">Today's Lunch Orders ({{ today }})</h4>
+<style>
+    .lunch-orders-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .header-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    
+    .back-btn:hover {
+        background: var(--bg-tertiary);
+        transform: translateY(-2px);
+    }
+    
+    .download-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        background: var(--success-color);
+        color: white;
+        border-radius: var(--radius-md);
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    
+    .download-btn:hover {
+        background: #047857;
+        transform: translateY(-2px);
+    }
+    
+    .orders-card {
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+    
+    .orders-header {
+        background: var(--primary-color);
+        color: white;
+        padding: 1.25rem;
+    }
+    
+    .orders-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+    }
+    
+    .orders-body {
+        padding: 1.5rem;
+    }
+    
+    .orders-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    
+    .orders-table thead {
+        background: var(--bg-tertiary);
+    }
+    
+    .orders-table th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 500;
+        color: var(--text-primary);
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .orders-table td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        vertical-align: middle;
+    }
+    
+    .orders-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .orders-table tr:hover td {
+        background: rgba(0, 0, 0, 0.02);
+    }
+    
+    .status-badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: var(--radius-full);
+        font-size: 0.8rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    
+    .status-pending {
+        background: rgba(234, 179, 8, 0.1);
+        color: #b45309;
+        border: 1px solid rgba(234, 179, 8, 0.3);
+    }
+    
+    .status-received {
+        background: rgba(59, 130, 246, 0.1);
+        color: #1d4ed8;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+    
+    .status-completed {
+        background: rgba(16, 185, 129, 0.1);
+        color: #047857;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    
+    .status-select {
+        padding: 0.5rem;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-color);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        transition: all 0.2s ease;
+    }
+    
+    .status-select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(80, 72, 229, 0.15);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted);
+    }
+    
+    .empty-state i {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: var(--text-tertiary);
+    }
+    
+    @media (max-width: 768px) {
+        .header-actions {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+        
+        .orders-table {
+            display: block;
+            overflow-x: auto;
+        }
+    }
+</style>
+
+<div class="lunch-orders-container">
+    <div class="header-actions">
+        <a href="{{ url_for('hr_dashboard') }}" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            Back to Dashboard
+        </a>
+        <a href="{{ url_for('hr_download_lunch_orders') }}" class="download-btn">
+            <i class="fas fa-download"></i>
+            Download CSV
+        </a>
     </div>
-    <div class="card-body">
-      {% if orders %}
-      <div class="table-responsive">
-        <table class="table table-hover align-middle">
-          <thead class="table-light">
-            <tr>
-              <th>Employee</th>
-              <th>Dish</th>
-              <th>Notes</th>
-              <th>Status</th>
-              <th>Time</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for order in orders %}
-            <tr>
-              <td>{{ order.full_name or order.username }}</td>
-              <td>{{ order.dish }}</td>
-              <td>{{ order.notes or '-' }}</td>
-              <td><span class="badge bg-{{ 'warning text-dark' if order.status == 'pending' else 'success' if order.status == 'completed' else 'info text-dark' if order.status == 'received' else 'secondary' }}">{{ order.status.title() }}</span></td>
-              <td>{{ order.created_at[11:16] }}</td>
-              <td>
-                <form method="POST" action="{{ url_for('hr_lunch_orders') }}" class="d-inline">
-                  <input type="hidden" name="order_id" value="{{ order.id }}">
-                  <select name="status" class="form-select form-select-sm d-inline w-auto" onchange="this.form.submit()">
-                    <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>Pending</option>
-                    <option value="received" {% if order.status == 'received' %}selected{% endif %}>Received</option>
-                    <option value="completed" {% if order.status == 'completed' %}selected{% endif %}>Completed</option>
-                  </select>
-                </form>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      {% else %}
-        <p class="text-muted">No lunch orders for today yet.</p>
-      {% endif %}
+    
+    <div class="orders-card">
+        <div class="orders-header">
+            <h2 class="orders-title">
+                <i class="fas fa-utensils me-2"></i>
+                Today's Lunch Orders ({{ today }})
+            </h2>
+        </div>
+        
+        <div class="orders-body">
+            {% if orders %}
+            <div class="table-responsive">
+                <table class="orders-table">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Dish</th>
+                            <th>Notes</th>
+                            <th>Status</th>
+                            <th>Time</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td>{{ order.full_name or order.username }}</td>
+                            <td>{{ order.dish }}</td>
+                            <td>{{ order.notes or '-' }}</td>
+                            <td>
+                                <span class="status-badge status-{{ order.status }}">
+                                    <i class="fas {% if order.status == 'pending' %}fa-clock{% elif order.status == 'received' %}fa-check{% else %}fa-check-double{% endif %}"></i>
+                                    {{ order.status.title() }}
+                                </span>
+                            </td>
+                            <td>{{ order.created_at[11:16] }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('hr_lunch_orders') }}">
+                                    <input type="hidden" name="order_id" value="{{ order.id }}">
+                                    <select name="status" class="status-select" onchange="this.form.submit()">
+                                        <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>Pending</option>
+                                        <option value="received" {% if order.status == 'received' %}selected{% endif %}>Received</option>
+                                        <option value="completed" {% if order.status == 'completed' %}selected{% endif %}>Completed</option>
+                                    </select>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-utensils"></i>
+                <p>No lunch orders for today yet</p>
+            </div>
+            {% endif %}
+        </div>
     </div>
-  </div>
 </div>
-{% endblock %} 
+{% endblock %}
