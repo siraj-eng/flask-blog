@@ -1,54 +1,254 @@
 {% extends 'base.html' %}
-{% block title %}HR Announcements - SoftNet Internal{% endblock %}
+{% block title %}HR Announcements - Modern HR System{% endblock %}
 {% block content %}
-<div class="container py-4">
-  <div class="mb-3">
-    <a href="{{ url_for('hr_dashboard') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>Back to Dashboard</a>
-  </div>
-  <div class="row">
-    <div class="col-md-6">
-      <div class="card shadow-sm mb-4">
-        <div class="card-header bg-orange text-white">
-          <h5 class="mb-0">Create Announcement</h5>
+<style>
+    .announcements-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        padding: 0.75rem 1.5rem;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    
+    .back-btn:hover {
+        background: var(--bg-tertiary);
+        transform: translateY(-2px);
+    }
+    
+    .announcements-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+    
+    .announcement-card {
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+    
+    .create-header {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .list-header {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .card-header {
+        padding: 1.25rem;
+    }
+    
+    .card-header h5 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+    
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        transition: all 0.2s ease;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(80, 72, 229, 0.15);
+    }
+    
+    textarea.form-control {
+        min-height: 150px;
+    }
+    
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: var(--radius-md);
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-primary {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #4338CA;
+        transform: translateY(-2px);
+    }
+    
+    .announcement-item {
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        background: var(--bg-tertiary);
+        border-radius: var(--radius-md);
+        border-left: 4px solid var(--primary-color);
+    }
+    
+    .announcement-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .announcement-meta {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .announcement-content {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+    
+    .btn-sm {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted);
+    }
+    
+    .empty-state i {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+    
+    @media (max-width: 1024px) {
+        .announcements-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="announcements-container">
+    <a href="{{ url_for('hr_dashboard') }}" class="back-btn">
+        <i class="fas fa-arrow-left"></i>
+        Back to Dashboard
+    </a>
+    
+    <div class="announcements-grid">
+        <!-- Create Announcement Card -->
+        <div class="announcement-card">
+            <div class="card-header create-header">
+                <h5>
+                    <i class="fas fa-plus-circle me-2"></i>
+                    Create Announcement
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="title" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="title" name="title" required maxlength="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="content" class="form-label">Content</label>
+                        <textarea class="form-control" id="content" name="content" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="image" class="form-label">Image (optional)</label>
+                        <input class="form-control" type="file" id="image" name="image" accept="image/*">
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i>
+                        Post Announcement
+                    </button>
+                </form>
+            </div>
         </div>
-        <div class="card-body">
-          <form method="POST" enctype="multipart/form-data">
-            <div class="mb-3">
-              <label for="title" class="form-label">Title</label>
-              <input type="text" class="form-control" id="title" name="title" required maxlength="100">
+        
+        <!-- Announcements List Card -->
+        <div class="announcement-card">
+            <div class="card-header list-header">
+                <h5>
+                    <i class="fas fa-bullhorn me-2"></i>
+                    All Announcements
+                </h5>
             </div>
-            <div class="mb-3">
-              <label for="content" class="form-label">Content</label>
-              <textarea class="form-control" id="content" name="content" rows="4" required></textarea>
+            <div class="card-body">
+                {% for a in announcements %}
+                <div class="announcement-item">
+                    <h6 class="announcement-title">{{ a.title }}</h6>
+                    <div class="announcement-meta">
+                        <i class="fas fa-user"></i>
+                        <span>By {{ a.author_name }}</span>
+                        <i class="fas fa-clock ms-2"></i>
+                        <span>{{ a.created_at[:16] }}</span>
+                    </div>
+                    <div class="announcement-content">{{ a.content|safe }}</div>
+                    <a href="{{ url_for('view_announcement', announcement_id=a.id) }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-eye"></i>
+                        View
+                    </a>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>No announcements yet</p>
+                </div>
+                {% endfor %}
             </div>
-            <div class="mb-3">
-              <label for="image" class="form-label">Image (optional)</label>
-              <input class="form-control" type="file" id="image" name="image" accept="image/*">
-            </div>
-            <button type="submit" class="btn btn-green">Post Announcement</button>
-          </form>
         </div>
-      </div>
     </div>
-    <div class="col-md-6">
-      <div class="card shadow-sm mb-4">
-        <div class="card-header bg-green text-white">
-          <h5 class="mb-0">All Announcements</h5>
-        </div>
-        <div class="card-body">
-          {% for a in announcements %}
-            <div class="mb-4 p-3 border rounded bg-light">
-              <h6 class="mb-1">{{ a.title }}</h6>
-              <div class="text-muted mb-2" style="font-size:0.9em;">By {{ a.author_name }} &middot; {{ a.created_at[:16] }}</div>
-              <div>{{ a.content|safe }}</div>
-              <a href="{{ url_for('view_announcement', announcement_id=a.id) }}" class="btn btn-sm btn-primary mt-2"><i class="fas fa-eye me-1"></i>View</a>
-            </div>
-          {% else %}
-            <p class="text-muted">No announcements yet.</p>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
-{% endblock %} 
+
+<script>
+    // Add form submission animation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+        submitBtn.disabled = true;
+    });
+</script>
+{% endblock %}

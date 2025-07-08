@@ -1,56 +1,219 @@
 {% extends 'base.html' %}
 {% block title %}Complaints - SoftNet Internal{% endblock %}
 {% block content %}
-<div class="container py-4">
-  <h2 class="mb-4">Complaints Management</h2>
-  <div class="card shadow-sm">
-    <div class="card-body">
-      <form method="get" class="mb-3 row g-2 align-items-center">
-        <div class="col-md-3">
-          <select class="form-select" name="status">
-            <option value="">All Statuses</option>
-            <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
-            <option value="resolved" {% if status == 'resolved' %}selected{% endif %}>Resolved</option>
-            <option value="dismissed" {% if status == 'dismissed' %}selected{% endif %}>Dismissed</option>
-          </select>
-        </div>
-        <div class="col-md-5">
-          <input type="text" class="form-control" name="q" placeholder="Search by title, user, department..." value="{{ q }}">
-        </div>
-        <div class="col-md-2">
-          <button type="submit" class="btn btn-green w-100"><i class="fas fa-search me-1"></i>Search</button>
-        </div>
-      </form>
-      <div class="table-responsive">
-        <table class="table table-hover align-middle">
-          <thead class="table-light">
-            <tr>
-              <th>Title</th>
-              <th>User</th>
-              <th>Department</th>
-              <th>Status</th>
-              <th>Date</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for c in complaints %}
-            <tr>
-              <td>{{ c.title }}</td>
-              <td>{{ c.full_name or c.username }}</td>
-              <td>{{ c.department or '-' }}</td>
-              <td><span class="badge {% if c.status == 'pending' %}bg-warning text-dark{% elif c.status == 'resolved' %}bg-success{% else %}bg-secondary{% endif %}">{{ c.status|capitalize }}</span></td>
-              <td>{{ c.created_at[:10] }}</td>
-              <td><a href="{{ url_for('hr_complaint_detail', complaint_id=c.id) }}" class="btn btn-sm btn-outline-primary">View</a></td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      {% if not complaints %}
-        <p class="text-muted mt-3">No complaints found.</p>
-      {% endif %}
+<style>
+    .complaints-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .complaints-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    
+    .complaints-title {
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    
+    .filter-card {
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .filter-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        align-items: end;
+    }
+    
+    .search-btn {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        padding: 0.75rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .search-btn:hover {
+        background: #4338CA;
+        transform: translateY(-2px);
+    }
+    
+    .complaints-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+    }
+    
+    .complaints-table thead {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .complaints-table th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 500;
+    }
+    
+    .complaints-table td {
+        padding: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .complaints-table tr:hover td {
+        background: var(--bg-tertiary);
+    }
+    
+    .status-badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: var(--radius-full);
+        font-size: 0.8rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    
+    .status-pending {
+        background: rgba(234, 179, 8, 0.1);
+        color: #b45309;
+        border: 1px solid rgba(234, 179, 8, 0.3);
+    }
+    
+    .status-resolved {
+        background: rgba(16, 185, 129, 0.1);
+        color: #047857;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    
+    .status-dismissed {
+        background: rgba(107, 114, 128, 0.1);
+        color: #4b5563;
+        border: 1px solid rgba(107, 114, 128, 0.3);
+    }
+    
+    .view-btn {
+        padding: 0.5rem 1rem;
+        background: transparent;
+        border: 1px solid var(--primary-color);
+        color: var(--primary-color);
+        border-radius: var(--radius-md);
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    
+    .view-btn:hover {
+        background: var(--primary-color);
+        color: white;
+        transform: translateY(-1px);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-muted);
+    }
+    
+    .empty-state i {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: var(--text-tertiary);
+    }
+</style>
+
+<div class="complaints-container">
+    <div class="complaints-header">
+        <h1 class="complaints-title">Complaints Management</h1>
     </div>
-  </div>
+    
+    <div class="filter-card">
+        <form method="get" class="filter-form">
+            <div>
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" name="status" id="status">
+                    <option value="">All Statuses</option>
+                    <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="resolved" {% if status == 'resolved' %}selected{% endif %}>Resolved</option>
+                    <option value="dismissed" {% if status == 'dismissed' %}selected{% endif %}>Dismissed</option>
+                </select>
+            </div>
+            <div>
+                <label for="search" class="form-label">Search</label>
+                <input type="text" class="form-control" id="search" name="q" placeholder="Title, user, department..." value="{{ q }}">
+            </div>
+            <button type="submit" class="search-btn">
+                <i class="fas fa-search"></i>
+                Search
+            </button>
+        </form>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="complaints-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>User</th>
+                    <th>Department</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in complaints %}
+                <tr>
+                    <td>{{ c.title }}</td>
+                    <td>{{ c.full_name or c.username }}</td>
+                    <td>{{ c.department or '-' }}</td>
+                    <td>
+                        <span class="status-badge status-{{ c.status }}">
+                            <i class="fas {% if c.status == 'pending' %}fa-clock{% elif c.status == 'resolved' %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i>
+                            {{ c.status|capitalize }}
+                        </span>
+                    </td>
+                    <td>{{ c.created_at[:10] }}</td>
+                    <td>
+                        <a href="{{ url_for('hr_complaint_detail', complaint_id=c.id) }}" class="view-btn">
+                            <i class="fas fa-eye"></i>
+                            View
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% if not complaints %}
+    <div class="empty-state">
+        <i class="fas fa-inbox"></i>
+        <p>No complaints found matching your criteria</p>
+    </div>
+    {% endif %}
 </div>
-{% endblock %} 
+{% endblock %}

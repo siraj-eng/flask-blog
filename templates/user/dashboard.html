@@ -11,7 +11,7 @@
         background-color: var(--bg-primary);
     }
 
-    /* Modern Sidebar */
+    /* Modern Sidebar with Bullet Points */
     .sidebar {
         width: 280px;
         background: var(--bg-secondary);
@@ -40,18 +40,7 @@
         color: var(--primary-color);
         text-transform: uppercase;
         letter-spacing: 1px;
-    }
-
-    .logo-icon {
-        width: 48px;
-        height: 48px;
-        background: var(--primary-color);
-        border-radius: var(--radius-lg);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        color: white;
+        font-family: 'Montserrat', sans-serif;
     }
 
     .sidebar-nav {
@@ -74,13 +63,22 @@
 
     .nav-item {
         margin-bottom: 4px;
+        position: relative;
+        padding-left: 24px;
+    }
+
+    .nav-item:before {
+        content: "•";
+        position: absolute;
+        left: 12px;
+        color: var(--text-muted);
     }
 
     .nav-link {
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 12px 24px;
+        padding: 12px 24px 12px 0;
         color: var(--text-secondary);
         text-decoration: none;
         transition: all 0.2s ease;
@@ -115,13 +113,6 @@
         padding: 32px;
         background-color: var(--bg-primary);
         min-height: 100vh;
-    }
-
-    .form-card,
-    .content-section {
-        max-width: none;
-        margin-left: 0;
-        margin-right: 0;
     }
 
     /* Header */
@@ -267,9 +258,6 @@
         border: 1px solid var(--border-color);
         box-shadow: var(--shadow-sm);
         margin-bottom: 32px;
-        max-width: 700px;
-        margin-left: auto;
-        margin-right: auto;
     }
 
     .section-header {
@@ -341,9 +329,6 @@
         border: 1px solid var(--border-color);
         box-shadow: var(--shadow-sm);
         margin-bottom: 32px;
-        max-width: 700px;
-        margin-left: auto;
-        margin-right: auto;
     }
 
     .form-group {
@@ -515,10 +500,6 @@
             width: 100%;
             height: 200px;
         }
-        .form-card,
-        .content-section {
-            max-width: 100%;
-        }
     }
 </style>
 
@@ -526,7 +507,7 @@
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
         <div class="sidebar-header">
-            <div class="logo" style="font-family: 'Montserrat', sans-serif;">
+            <div class="logo">
                 TeamSync
             </div>
         </div>
@@ -536,31 +517,31 @@
                 <div class="nav-section-title">Navigation</div>
                 <ul>
                     <li class="nav-item">
-                        <a href="{{ url_for('dashboard') }}" class="nav-link active">
+                        <a href="{{ url_for('dashboard') }}" class="nav-link{% if active_page == 'dashboard' %} active{% endif %}">
                             <i class="fas fa-tachometer-alt"></i>
                             <span>Dashboard</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="{{ url_for('user_complaints') }}" class="nav-link">
+                        <a href="{{ url_for('user_complaints') }}" class="nav-link{% if active_page == 'complaints' %} active{% endif %}">
                             <i class="fas fa-exclamation-triangle"></i>
                             <span>Complaints</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="{{ url_for('user_repairs') }}" class="nav-link">
+                        <a href="{{ url_for('user_repairs') }}" class="nav-link{% if active_page == 'repairs' %} active{% endif %}">
                             <i class="fas fa-tools"></i>
                             <span>Repairs</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="{{ url_for('user_events') }}" class="nav-link">
+                        <a href="{{ url_for('user_events') }}" class="nav-link{% if active_page == 'events' %} active{% endif %}">
                             <i class="fas fa-calendar-alt"></i>
                             <span>Events</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="{{ url_for('chat') }}" class="nav-link">
+                        <a href="{{ url_for('chat') }}" class="nav-link{% if active_page == 'chat' %} active{% endif %}">
                             <i class="fas fa-comments"></i>
                             <span>Chat</span>
                         </a>
@@ -691,7 +672,7 @@
 
         <!-- Today's Menu -->
         {% if today_menu %}
-        <div class="content-section" style="max-width:none;width:100%;margin-left:0;margin-right:0;">
+        <div class="content-section">
             <div class="section-header">
                 <h2 class="section-title"><i class="fas fa-utensils"></i> Today's Menu</h2>
             </div>
@@ -722,7 +703,7 @@
         {% endif %}
 
         <!-- Lunch Order Form -->
-        <div class="form-card" style="max-width:none;width:100%;margin-left:0;margin-right:0;">
+        <div class="form-card">
             <div class="section-header">
                 <h2 class="section-title"><i class="fas fa-utensils"></i> Daily Lunch Order</h2>
             </div>
@@ -747,7 +728,7 @@
         </div>
 
         <!-- Announcements -->
-        <div class="content-section" style="max-width:none;width:100%;margin-left:0;margin-right:0;">
+        <div class="content-section">
             <div class="section-header">
                 <h2 class="section-title"><i class="fas fa-bullhorn"></i> Latest Announcements</h2>
                 <a href="#" class="btn btn-sm">View All</a>

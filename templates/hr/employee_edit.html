@@ -1,47 +1,185 @@
 {% extends 'base.html' %}
-{% block title %}Edit Employee - SoftNet Internal{% endblock %}
+{% block title %}Edit Employee - Modern HR System{% endblock %}
 {% block content %}
-<div class="container py-4">
-  <div class="row justify-content-center">
-    <div class="col-md-8">
-      <div class="card shadow-sm">
-        <div class="card-header bg-orange text-white">
-          <h4 class="mb-0">Edit Employee</h4>
+<style>
+    .employee-edit-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .edit-card {
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+    
+    .edit-header {
+        padding: 1.5rem;
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .edit-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .edit-body {
+        padding: 2rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        transition: all 0.2s ease;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(80, 72, 229, 0.15);
+    }
+    
+    .form-select {
+        width: 100%;
+        padding: 0.75rem;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        transition: all 0.2s ease;
+    }
+    
+    .form-select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(80, 72, 229, 0.15);
+    }
+    
+    .edit-footer {
+        padding: 1.5rem;
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        border-top: 1px solid var(--border-light);
+    }
+    
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: var(--radius-md);
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-primary {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #4338CA;
+        transform: translateY(-2px);
+    }
+    
+    .btn-secondary {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+    }
+    
+    .btn-secondary:hover {
+        background: var(--bg-secondary);
+        transform: translateY(-2px);
+    }
+</style>
+
+<div class="employee-edit-container">
+    <div class="edit-card">
+        <div class="edit-header">
+            <h2>
+                <i class="fas fa-user-edit"></i>
+                Edit Employee
+            </h2>
         </div>
         <form method="POST" action="">
-          <div class="card-body">
-            <div class="mb-3">
-              <label for="full_name" class="form-label">Full Name</label>
-              <input type="text" class="form-control" id="full_name" name="full_name" value="{{ employee.full_name }}" required>
+            <div class="edit-body">
+                <div class="form-group">
+                    <label for="full_name" class="form-label">Full Name</label>
+                    <input type="text" class="form-control" id="full_name" name="full_name" 
+                           value="{{ employee.full_name }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" 
+                           value="{{ employee.email }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="department" class="form-label">Department</label>
+                    <input type="text" class="form-control" id="department" name="department" 
+                           value="{{ employee.department }}">
+                </div>
+                <div class="form-group">
+                    <label for="position" class="form-label">Position</label>
+                    <input type="text" class="form-control" id="position" name="position" 
+                           value="{{ employee.position }}">
+                </div>
+                <div class="form-group">
+                    <label for="role" class="form-label">Role</label>
+                    <select class="form-select" id="role" name="role">
+                        <option value="user" {% if employee.role == 'user' %}selected{% endif %}>User</option>
+                        <option value="hr" {% if employee.role == 'hr' %}selected{% endif %}>HR</option>
+                        <option value="admin" {% if employee.role == 'admin' %}selected{% endif %}>Admin</option>
+                    </select>
+                </div>
             </div>
-            <div class="mb-3">
-              <label for="email" class="form-label">Email</label>
-              <input type="email" class="form-control" id="email" name="email" value="{{ employee.email }}" required>
+            <div class="edit-footer">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    Save Changes
+                </button>
+                <a href="{{ url_for('hr_employee_detail', user_id=employee.id) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Cancel
+                </a>
             </div>
-            <div class="mb-3">
-              <label for="department" class="form-label">Department</label>
-              <input type="text" class="form-control" id="department" name="department" value="{{ employee.department }}">
-            </div>
-            <div class="mb-3">
-              <label for="position" class="form-label">Position</label>
-              <input type="text" class="form-control" id="position" name="position" value="{{ employee.position }}">
-            </div>
-            <div class="mb-3">
-              <label for="role" class="form-label">Role</label>
-              <select class="form-select" id="role" name="role">
-                <option value="user" {% if employee.role == 'user' %}selected{% endif %}>User</option>
-                <option value="hr" {% if employee.role == 'hr' %}selected{% endif %}>HR</option>
-                <option value="admin" {% if employee.role == 'admin' %}selected{% endif %}>Admin</option>
-              </select>
-            </div>
-          </div>
-          <div class="card-footer text-end">
-            <button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i>Save Changes</button>
-            <a href="{{ url_for('hr_employee_detail', user_id=employee.id) }}" class="btn btn-secondary ms-2"><i class="fas fa-arrow-left me-1"></i>Cancel</a>
-          </div>
         </form>
-      </div>
     </div>
-  </div>
 </div>
-{% endblock %} 
+
+<script>
+    // Add form submission animation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        submitBtn.disabled = true;
+    });
+</script>
+{% endblock %}

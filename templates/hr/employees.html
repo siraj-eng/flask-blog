@@ -1,51 +1,167 @@
 {% extends 'base.html' %}
-{% block title %}Employees - SoftNet Internal{% endblock %}
+{% block title %}Employees - Modern HR System{% endblock %}
 {% block content %}
-<div class="container py-4">
-  <h2 class="mb-4">Employees</h2>
-  <div class="card shadow-sm">
-    <div class="card-body">
-      <form method="get" class="mb-3 d-flex justify-content-between align-items-center">
-        <div class="row g-2 align-items-center flex-grow-1">
-          <div class="col-md-8">
-            <input type="text" class="form-control" name="q" placeholder="Search by name, department, or position" value="{{ request.args.get('q', '') }}">
-          </div>
-          <div class="col-md-2">
-            <button type="submit" class="btn btn-green w-100"><i class="fas fa-search me-1"></i>Search</button>
-          </div>
-        </div>
-        <a href="{{ url_for('hr_employees_export_pdf', q=request.args.get('q', '')) }}" class="btn btn-outline-danger ms-2"><i class="fas fa-file-pdf me-1"></i>Export PDF</a>
-      </form>
-      <div class="table-responsive">
-        <table class="table table-hover align-middle">
-          <thead class="table-light">
-            <tr>
-              <th>Name</th>
-              <th>Department</th>
-              <th>Position</th>
-              <th>Email</th>
-              <th>Date Joined</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for emp in employees %}
-            <tr>
-              <td>{{ emp.full_name or emp.username }}</td>
-              <td>{{ emp.department or '-' }}</td>
-              <td>{{ emp.position or '-' }}</td>
-              <td>{{ emp.email }}</td>
-              <td>{{ emp.created_at[:10] }}</td>
-              <td><a href="{{ url_for('hr_employee_detail', user_id=emp.id) }}" class="btn btn-sm btn-outline-primary">View</a></td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      {% if not employees %}
-        <p class="text-muted mt-3">No employees found.</p>
-      {% endif %}
+<style>
+    .employees-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    
+    .page-title {
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    
+    .search-card {
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 1.5rem;
+        padding: 1.5rem;
+    }
+    
+    .search-form {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+    
+    .search-input {
+        flex: 1;
+    }
+    
+    .export-btn {
+        white-space: nowrap;
+    }
+    
+    .employees-table {
+        width: 100%;
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+    
+    .table-header {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .table-header th {
+        padding: 1rem;
+        font-weight: 500;
+        text-align: left;
+    }
+    
+    .table-body tr {
+        border-bottom: 1px solid var(--border-light);
+    }
+    
+    .table-body tr:last-child {
+        border-bottom: none;
+    }
+    
+    .table-body td {
+        padding: 1rem;
+        vertical-align: middle;
+    }
+    
+    .action-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .no-results {
+        padding: 2rem;
+        text-align: center;
+        color: var(--text-muted);
+    }
+    
+    @media (max-width: 768px) {
+        .search-form {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .export-btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="employees-container">
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-users me-2"></i>
+            Employees
+        </h1>
     </div>
-  </div>
+    
+    <div class="search-card">
+        <form method="get" class="search-form">
+            <input type="text" class="form-control search-input" name="q" 
+                   placeholder="Search by name, department, or position" 
+                   value="{{ request.args.get('q', '') }}">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search me-1"></i>
+                Search
+            </button>
+            <a href="{{ url_for('hr_employees_export_pdf', q=request.args.get('q', '')) }}" 
+               class="btn btn-outline-danger export-btn">
+                <i class="fas fa-file-pdf me-1"></i>
+                Export PDF
+            </a>
+        </form>
+    </div>
+    
+    <div class="employees-table">
+        <table class="w-100">
+            <thead class="table-header">
+                <tr>
+                    <th>Name</th>
+                    <th>Department</th>
+                    <th>Position</th>
+                    <th>Email</th>
+                    <th>Date Joined</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody class="table-body">
+                {% for emp in employees %}
+                <tr>
+                    <td>{{ emp.full_name or emp.username }}</td>
+                    <td>{{ emp.department or '-' }}</td>
+                    <td>{{ emp.position or '-' }}</td>
+                    <td>{{ emp.email }}</td>
+                    <td>{{ emp.created_at[:10] }}</td>
+                    <td>
+                        <a href="{{ url_for('hr_employee_detail', user_id=emp.id) }}" 
+                           class="btn btn-sm btn-outline-primary action-btn">
+                            View
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        {% if not employees %}
+        <div class="no-results">
+            <i class="fas fa-user-slash fa-2x mb-2"></i>
+            <p>No employees found matching your search criteria.</p>
+        </div>
+        {% endif %}
+    </div>
 </div>
-{% endblock %} 
+{% endblock %}

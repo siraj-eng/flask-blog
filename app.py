@@ -261,8 +261,12 @@ def home():
             return redirect(url_for('admin_dashboard'))
         elif role == 'hr':
             return redirect(url_for('hr_dashboard'))
-        else:
+        elif role == 'user':
             return redirect(url_for('dashboard'))
+        else:
+            # Unknown role, log out for safety
+            session.clear()
+            return redirect(url_for('login'))
     return redirect(url_for('login'))
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -376,6 +380,16 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
+    # Only allow regular users to access /dashboard
+    if session.get('role') != 'user':
+        # Redirect to correct dashboard for admin or hr
+        if session.get('role') == 'admin':
+            return redirect(url_for('admin_dashboard'))
+        elif session.get('role') == 'hr':
+            return redirect(url_for('hr_dashboard'))
+        else:
+            session.clear()
+            return redirect(url_for('login'))
     total_start = time.time()
     with get_db() as db:
         t1 = time.time()
@@ -610,6 +624,13 @@ def read_notification(notification_id):
             db.commit()
             if notification['announcement_id']:
                 return redirect(url_for('view_announcement', announcement_id=notification['announcement_id']))
+        # Always redirect to the correct dashboard based on role
+        if session.get('role') == 'admin':
+            return redirect(url_for('admin_dashboard'))
+        elif session.get('role') == 'hr':
+            return redirect(url_for('hr_dashboard'))
+        else:
+            return redirect(url_for('dashboard'))
     return redirect(url_for('dashboard'))
 
 @app.before_request

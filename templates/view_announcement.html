@@ -3,61 +3,342 @@
 {% block title %}Announcement - {{ announcement.title }}{% endblock %}
 
 {% block content %}
-<div class="container my-4" style="margin-top: 2rem;">
-    <div class="card mb-4 shadow-sm">
-        <div class="card-header bg-orange text-white d-flex justify-content-between align-items-center">
+<style>
+    .announcement-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+        padding: 0 1.5rem;
+    }
+    
+    .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        padding: 0.75rem 1.25rem;
+        background: var(--primary-color);
+        color: white;
+        border-radius: var(--radius-md);
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    
+    .back-btn:hover {
+        background: #4338CA;
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .announcement-card {
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+    
+    .announcement-header {
+        background: var(--primary-color);
+        color: white;
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .announcement-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .author-badge {
+        background: var(--success-color);
+        padding: 0.25rem 0.5rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .author-name {
+        color: rgba(255,255,255,0.8);
+        font-size: 0.95rem;
+    }
+    
+    .announcement-date {
+        color: rgba(255,255,255,0.8);
+        font-size: 0.9rem;
+    }
+    
+    .announcement-body {
+        padding: 1.5rem;
+    }
+    
+    .announcement-content {
+        line-height: 1.7;
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+    }
+    
+    .comments-card {
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+    
+    .comments-header {
+        background: var(--primary-color);
+        color: white;
+        padding: 1rem 1.5rem;
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+    
+    .comments-body {
+        padding: 1.5rem;
+    }
+    
+    .comment-list {
+        margin-bottom: 2rem;
+    }
+    
+    .comment-item {
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        background: var(--bg-tertiary);
+        border-radius: var(--radius-md);
+        border-left: 4px solid var(--primary-color);
+    }
+    
+    .comment-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        gap: 0.75rem;
+    }
+    
+    .comment-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        flex-shrink: 0;
+    }
+    
+    .comment-author {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    
+    .comment-date {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        margin-left: 0.5rem;
+    }
+    
+    .comment-content {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        padding-left: 50px;
+    }
+    
+    .delete-comment-btn {
+        margin-left: auto;
+        padding: 0.25rem 0.5rem;
+        background: var(--danger-color);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .delete-comment-btn:hover {
+        background: #DC2626;
+        transform: translateY(-1px);
+    }
+    
+    .comment-form {
+        margin-top: 2rem;
+    }
+    
+    .comment-textarea {
+        width: 100%;
+        padding: 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        min-height: 100px;
+        margin-bottom: 1rem;
+        transition: all 0.2s ease;
+    }
+    
+    .comment-textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(80, 72, 229, 0.15);
+    }
+    
+    .submit-comment-btn {
+        padding: 0.75rem 1.5rem;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .submit-comment-btn:hover {
+        background: #4338CA;
+        transform: translateY(-2px);
+    }
+    
+    .no-comments {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted);
+    }
+    
+    @media (max-width: 768px) {
+        .announcement-container {
+            padding: 0 1rem;
+        }
+        
+        .announcement-title {
+            font-size: 1.25rem;
+        }
+        
+        .announcement-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+    }
+</style>
+
+<div class="announcement-container">
+    {% if session['role'] == 'admin' %}
+      <a href="{{ url_for('admin_dashboard') }}" class="back-btn">
+        <i class="fas fa-arrow-left"></i>
+        Back to Admin Dashboard
+      </a>
+    {% elif session['role'] == 'hr' %}
+      <a href="{{ url_for('hr_dashboard') }}" class="back-btn">
+        <i class="fas fa-arrow-left"></i>
+        Back to HR Dashboard
+      </a>
+    {% else %}
+      <a href="{{ url_for('dashboard') }}" class="back-btn">
+        <i class="fas fa-arrow-left"></i>
+        Back to Dashboard
+      </a>
+    {% endif %}
+    
+    <!-- Announcement Card -->
+    <div class="announcement-card">
+        <div class="announcement-header">
             <div>
-                <h4 class="mb-0 d-inline">{{ announcement.title }}</h4>
-                {% if session.get('user_id') == announcement.author_id %}
-                  <span class="badge bg-green ms-2">You</span>
-                {% endif %}
-                <span class="text-muted ms-2">by {{ announcement.author_name }}</span>
+                <h2 class="announcement-title">
+                    {{ announcement.title }}
+                    {% if session.get('user_id') == announcement.author_id %}
+                      <span class="author-badge">You</span>
+                    {% endif %}
+                    <span class="author-name">by {{ announcement.author_name }}</span>
+                </h2>
             </div>
-            <span class="small">{{ announcement.created_at[:10] }}</span>
+            <span class="announcement-date">
+                <i class="far fa-calendar-alt"></i> {{ announcement.created_at[:10] }}
+            </span>
         </div>
-        <div class="card-body">
-            <div class="mb-3">{{ announcement.content|safe }}</div>
-            <a href="{{ url_for('dashboard') }}" class="btn btn-orange btn-sm"><i class="fas fa-arrow-left me-1"></i>Back to Dashboard</a>
+        <div class="announcement-body">
+            <div class="announcement-content">
+                {{ announcement.content|safe }}
+            </div>
+            <a href="{{ url_for('dashboard') }}" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                Back to Dashboard
+            </a>
         </div>
     </div>
-    <div class="card mb-4 shadow-sm">
-        <div class="card-header bg-green text-white">
-            <h5 class="mb-0">Comments</h5>
+    
+    <!-- Comments Section -->
+    <div class="comments-card">
+        <div class="comments-header">
+            <i class="fas fa-comments me-2"></i>
+            Comments
         </div>
-        <div class="card-body">
+        <div class="comments-body">
             {% if comments %}
-                <ul class="list-group mb-4">
+                <div class="comment-list">
                     {% for comment in comments %}
-                    <li class="list-group-item">
-                        <div class="d-flex align-items-center mb-1">
-                            <div class="avatar rounded-circle bg-orange text-white d-flex align-items-center justify-content-center me-2" style="width:36px;height:36px;font-weight:bold;">
+                    <div class="comment-item">
+                        <div class="comment-header">
+                            <div class="comment-avatar">
                                 {{ (comment.full_name or comment.username)[0]|upper }}
                             </div>
-                            <div class="flex-grow-1">
-                                <strong>{{ comment.full_name or comment.username }}</strong>
-                                <span class="text-muted small ms-2">{{ comment.created_at[:16] }}</span>
+                            <div class="comment-author">
+                                {{ comment.full_name or comment.username }}
+                                <span class="comment-date">{{ comment.created_at[:16] }}</span>
                             </div>
                             {% if session.get('role') == 'admin' %}
-                            <form method="POST" action="{{ url_for('delete_comment', comment_id=comment.id) }}" style="display:inline;">
-                                <button type="submit" class="btn btn-danger btn-sm ms-2" onclick="return confirm('Delete this comment?')"><i class="fas fa-trash"></i></button>
+                            <form method="POST" action="{{ url_for('delete_comment', comment_id=comment.id) }}" style="margin-left: auto;">
+                                <button type="submit" class="delete-comment-btn" onclick="return confirm('Are you sure you want to delete this comment?')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </form>
                             {% endif %}
                         </div>
-                        <div class="ps-5">{{ comment.content }}</div>
-                    </li>
+                        <div class="comment-content">
+                            {{ comment.content }}
+                        </div>
+                    </div>
                     {% endfor %}
-                </ul>
-            {% else %}
-                <p class="text-muted">No comments yet. Be the first to comment!</p>
-            {% endif %}
-            <form method="POST" action="{{ url_for('add_comment', announcement_id=announcement.id) }}" class="mt-4">
-                <div class="form-floating mb-3">
-                    <textarea class="form-control rounded-3" id="commentContent" name="content" placeholder="Add a comment..." rows="3" required style="min-height:80px;"></textarea>
-                    <label for="commentContent">Add a Comment</label>
                 </div>
-                <button type="submit" class="btn btn-green"><i class="fas fa-paper-plane me-1"></i>Post Comment</button>
+            {% else %}
+                <div class="no-comments">
+                    <i class="far fa-comment-dots fa-2x mb-2"></i>
+                    <p>No comments yet. Be the first to comment!</p>
+                </div>
+            {% endif %}
+            
+            <!-- Comment Form -->
+            <form method="POST" action="{{ url_for('add_comment', announcement_id=announcement.id) }}" class="comment-form">
+                <textarea class="comment-textarea" id="commentContent" name="content" placeholder="Write your comment here..." required></textarea>
+                <button type="submit" class="submit-comment-btn">
+                    <i class="fas fa-paper-plane"></i>
+                    Post Comment
+                </button>
             </form>
         </div>
     </div>
 </div>
-{% endblock %} 
+
+<script>
+    // Add form submission loading state
+    document.querySelector('.comment-form').addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+        submitBtn.disabled = true;
+    });
+</script>
+{% endblock %}
