@@ -1,70 +1,537 @@
 {% extends "base.html" %}
 
-{% block title %}HR Dashboard - SoftNet Internal{% endblock %}
+{% block title %}HR Dashboard - Modern HR System{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="row">
-        <div class="col-md-2">
-            <div class="sidebar bg-white shadow-sm rounded p-3">
-                <h5 class="mb-4 text-green">HR Menu</h5>
-                <ul class="nav flex-column">
-                    <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('hr_dashboard') }}"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
-                    <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('hr_employees') }}"><i class="fas fa-users me-2"></i>Employees</a></li>
-                    <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('hr_announcements') }}"><i class="fas fa-bullhorn me-2"></i>Announcements</a></li>
-                    <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('hr_settings') }}"><i class="fas fa-cog me-2"></i>Settings</a></li>
-                    <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('hr_complaints') }}"><i class="fas fa-exclamation-circle me-2"></i>Complaints</a></li>
-                    <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('hr_repairs') }}"><i class="fas fa-tools me-2"></i>Repairs</a></li>
-                    <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('hr_events') }}"><i class="fas fa-calendar me-2"></i>Events</a></li>
-                    <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('hr_lunch_orders') }}"><i class="fas fa-utensils me-2"></i>Lunch Orders</a></li>
-                    <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('hr_lunch_menu') }}"><i class="fas fa-utensils me-2"></i>Post Today's Menu</a></li>
-                    <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('all_notifications') }}"><i class="fas fa-bell me-2"></i>Notifications</a></li>
-                    <li class="nav-item mt-4"><a class="nav-link text-danger" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+<style>
+    /* Dashboard Layout */
+    .dashboard-container {
+        display: flex;
+        min-height: 100vh;
+        background-color: var(--bg-primary);
+    }
+
+    /* Modern Sidebar - Matching User Dashboard */
+    .sidebar {
+        width: 280px;
+        background: var(--bg-secondary);
+        border-right: 1px solid var(--border-color);
+        padding: 0;
+        position: fixed;
+        height: 100vh;
+        overflow-y: auto;
+        z-index: 1000;
+        box-shadow: var(--shadow-md);
+    }
+
+    .sidebar-header {
+        padding: 32px 24px;
+        border-bottom: 1px solid var(--border-color);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        font-size: 32px;
+        font-weight: 900;
+        color: var(--primary-color);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-family: 'Montserrat', sans-serif;
+    }
+
+    .sidebar-nav {
+        padding: 24px 0;
+    }
+
+    .nav-section {
+        margin-bottom: 24px;
+    }
+
+    .nav-section-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+        padding: 0 24px;
+    }
+
+    .nav-item {
+        margin-bottom: 4px;
+        position: relative;
+        padding-left: 24px;
+    }
+
+    .nav-item:before {
+        content: "•";
+        position: absolute;
+        left: 12px;
+        color: var(--text-muted);
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 24px 12px 0;
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: all 0.2s ease;
+        font-size: 14px;
+        font-weight: 500;
+        border-left: 3px solid transparent;
+    }
+
+    .nav-link:hover {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+        border-left-color: var(--primary-color);
+    }
+
+    .nav-link.active {
+        background: rgba(80, 72, 229, 0.05);
+        color: var(--primary-color);
+        border-left-color: var(--primary-color);
+        font-weight: 600;
+    }
+
+    .nav-link i {
+        width: 20px;
+        text-align: center;
+        font-size: 18px;
+    }
+
+    /* Main Content */
+    .main-content {
+        flex: 1;
+        margin-left: 280px;
+        padding: 32px;
+        background-color: var(--bg-primary);
+        min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+        padding: 24px;
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .header-title h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .header-title p {
+        font-size: 16px;
+        color: var(--text-secondary);
+        margin-top: 8px;
+        margin-bottom: 0;
+    }
+
+    .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, var(--primary-color), #4338CA);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        font-weight: 600;
+        color: white;
+    }
+
+    .user-info h4 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .user-info p {
+        margin: 0;
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+    }
+
+    .stat-card {
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        border: 1px solid var(--border-color);
+        transition: all 0.2s ease;
+        position: relative;
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 16px;
+    }
+
+    .stat-title {
+        font-size: 14px;
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        color: white;
+    }
+
+    .stat-icon.employees {
+        background: linear-gradient(135deg, #10B981, #059669);
+    }
+
+    .stat-icon.complaints {
+        background: linear-gradient(135deg, #F59E0B, #D97706);
+    }
+
+    .stat-icon.repairs {
+        background: linear-gradient(135deg, #3B82F6, #2563EB);
+    }
+
+    .stat-icon.events {
+        background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+    }
+
+    .stat-value {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 8px 0 4px;
+    }
+
+    .stat-change {
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .stat-change.positive {
+        color: var(--success-color);
+    }
+
+    .stat-change.negative {
+        color: var(--danger-color);
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .sidebar {
+            width: 240px;
+        }
+        
+        .main-content {
+            margin-left: 240px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .sidebar {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .sidebar.active {
+            transform: translateX(0);
+        }
+        
+        .main-content {
+            margin-left: 0;
+            padding: 24px;
+        }
+        
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+        }
+    }
+</style>
+
+<div class="dashboard-container">
+    <!-- Sidebar Navigation - Matching User Dashboard Style -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                TeamSync HR
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Navigation</div>
+                <ul>
+                    <li class="nav-item">
+                        <a href="{{ url_for('hr_dashboard') }}" class="nav-link active">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('hr_employees') }}" class="nav-link">
+                            <i class="fas fa-users"></i>
+                            <span>Employees</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('hr_announcements') }}" class="nav-link">
+                            <i class="fas fa-bullhorn"></i>
+                            <span>Announcements</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('hr_complaints') }}" class="nav-link">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>Complaints</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('hr_repairs') }}" class="nav-link">
+                            <i class="fas fa-tools"></i>
+                            <span>Repairs</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('hr_events') }}" class="nav-link">
+                            <i class="fas fa-calendar"></i>
+                            <span>Events</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('hr_lunch_orders') }}" class="nav-link">
+                            <i class="fas fa-utensils"></i>
+                            <span>Lunch Orders</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('hr_lunch_menu') }}" class="nav-link">
+                            <i class="fas fa-utensils"></i>
+                            <span>Post Today's Menu</span>
+                        </a>
+                    </li>
                 </ul>
             </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">Account</div>
+                <ul>
+                    <li class="nav-item">
+                        <a href="{{ url_for('hr_settings') }}" class="nav-link">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('all_notifications') }}" class="nav-link">
+                            <i class="fas fa-bell"></i>
+                            <span>Notifications</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('logout') }}" class="nav-link">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Welcome Alert -->
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i>
+            <div>
+                <strong>Welcome to TeamSync HR</strong> - Human Resources Management System
+            </div>
         </div>
-        <div class="col-md-10">
-            <h2 class="mb-4">HR Dashboard</h2>
-            <div class="row g-4 mb-4">
-                <div class="col-md-3">
-                    <div class="card shadow-sm text-center">
-                        <div class="card-body">
-                            <i class="fas fa-users fa-2x text-green mb-2"></i>
-                            <h4>{{ total_employees }}</h4>
-                            <p class="mb-0">Total Employees</p>
-                        </div>
+        
+        <!-- Header -->
+        <div class="header">
+            <div class="header-title">
+                <h1>HR Dashboard</h1>
+                <p>Manage your workforce and company resources</p>
+            </div>
+            
+            <div class="user-profile">
+                <div class="user-avatar">HR</div>
+                <div class="user-info">
+                    <h4>{{ session.get('full_name', session.get('username')) }}</h4>
+                    <p>HR Administrator</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-title">Total Employees</div>
+                    <div class="stat-icon employees">
+                        <i class="fas fa-users"></i>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card shadow-sm text-center">
-                        <div class="card-body">
-                            <i class="fas fa-exclamation-circle fa-2x text-orange mb-2"></i>
-                            <h4>{{ open_complaints }}</h4>
-                            <p class="mb-0">Open Complaints</p>
-                        </div>
+                <div class="stat-value" id="employeesCount">{{ total_employees }}</div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>From last month</span>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-title">Open Complaints</div>
+                    <div class="stat-icon complaints">
+                        <i class="fas fa-exclamation-circle"></i>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card shadow-sm text-center">
-                        <div class="card-body">
-                            <i class="fas fa-tools fa-2x text-green mb-2"></i>
-                            <h4>{{ open_repairs }}</h4>
-                            <p class="mb-0">Open Repairs</p>
-                        </div>
+                <div class="stat-value" id="complaintsCount">{{ open_complaints }}</div>
+                <div class="stat-change negative">
+                    <i class="fas fa-arrow-down"></i>
+                    <span>From last week</span>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-title">Open Repairs</div>
+                    <div class="stat-icon repairs">
+                        <i class="fas fa-tools"></i>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card shadow-sm text-center">
-                        <div class="card-body">
-                            <i class="fas fa-calendar fa-2x text-orange mb-2"></i>
-                            <h4>{{ upcoming_events }}</h4>
-                            <p class="mb-0">Upcoming Events</p>
-                        </div>
+                <div class="stat-value" id="repairsCount">{{ open_repairs }}</div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>From yesterday</span>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-title">Upcoming Events</div>
+                    <div class="stat-icon events">
+                        <i class="fas fa-calendar"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="eventsCount">{{ upcoming_events }}</div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>This week</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Optional: Add recent activity or quick links here -->
+        <div class="content-section">
+            <div class="section-header">
+                <h2 class="section-title"><i class="fas fa-bell"></i> Recent Notifications</h2>
+                <a href="{{ url_for('all_notifications') }}" class="btn btn-sm">View All</a>
+            </div>
+            <div>
+                <!-- Sample notifications - replace with actual data -->
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                        <strong>System Update</strong> - New HR policies have been uploaded
+                    </div>
+                </div>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <strong>Pending Approval</strong> - 3 new employee onboarding requests
                     </div>
                 </div>
             </div>
-            <!-- Optional: Add recent activity or quick links here -->
         </div>
-    </div>
+    </main>
 </div>
+
+<script>
+    // Animate counting numbers
+    function animateValue(element, start, end, duration) {
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            const current = Math.floor(progress * (end - start) + start);
+            element.innerHTML = current;
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            }
+        };
+        window.requestAnimationFrame(step);
+    }
+
+    // Initialize count animations
+    document.addEventListener('DOMContentLoaded', function() {
+        const employeesCount = document.getElementById('employeesCount');
+        const complaintsCount = document.getElementById('complaintsCount');
+        const repairsCount = document.getElementById('repairsCount');
+        const eventsCount = document.getElementById('eventsCount');
+        
+        setTimeout(() => {
+            animateValue(employeesCount, 0, {{ total_employees or 0 }}, 1500);
+            animateValue(complaintsCount, 0, {{ open_complaints or 0 }}, 1800);
+            animateValue(repairsCount, 0, {{ open_repairs or 0 }}, 2000);
+            animateValue(eventsCount, 0, {{ upcoming_events or 0 }}, 2200);
+        }, 500);
+    });
+</script>
 {% endblock %}
