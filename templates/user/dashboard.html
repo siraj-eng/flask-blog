@@ -707,7 +707,7 @@
             <div class="section-header">
                 <h2 class="section-title"><i class="fas fa-utensils"></i> Daily Lunch Order</h2>
             </div>
-            <form method="POST" enctype="multipart/form-data">
+            <form method="POST" action="{{ url_for('submit_lunch_order') }}" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="main_menu" class="form-label">Main Menu</label>
                     <input type="text" class="form-control" id="main_menu" name="main_menu" placeholder="Enter main menu item..." required>

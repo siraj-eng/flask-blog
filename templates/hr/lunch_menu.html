@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% block title %}Lunch Menu - HR{% endblock %}
+{% block content %}
+<style>
+    .menu-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+    }
+    
+    .menu-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .menu-title {
+        font-size: 2rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+    
+    .menu-form {
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        padding: 2rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        transition: all 0.2s ease;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(80, 72, 229, 0.15);
+    }
+    
+    textarea.form-control {
+        min-height: 120px;
+    }
+    
+    .file-input-wrapper {
+        margin-top: 0.5rem;
+    }
+    
+    .menu-image-preview {
+        margin-top: 1rem;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        max-width: 300px;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .menu-image-preview img {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+    
+    .save-btn {
+        padding: 0.75rem 1.5rem;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .save-btn:hover {
+        background: #4338CA;
+        transform: translateY(-2px);
+    }
+    
+    @media (max-width: 768px) {
+        .menu-container {
+            padding: 1rem;
+        }
+        
+        .menu-form {
+            padding: 1.5rem;
+        }
+    }
+</style>
+
+<div class="menu-container">
+    <div class="menu-header">
+        <i class="fas fa-utensils" style="font-size: 2rem; color: var(--primary-color);"></i>
+        <h1 class="menu-title">Today's Lunch Menu ({{ today }})</h1>
+    </div>
+    
+    <form method="POST" enctype="multipart/form-data" class="menu-form">
+        <div class="form-group">
+            <label for="main_menu" class="form-label">Main Menu</label>
+            <input type="text" class="form-control" id="main_menu" name="main_menu" 
+                   value="{{ menu.main_menu if menu else '' }}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="accompaniment" class="form-label">Accompaniment</label>
+            <input type="text" class="form-control" id="accompaniment" name="accompaniment" 
+                   value="{{ menu.accompaniment if menu else '' }}">
+        </div>
+        
+        <div class="form-group">
+            <label for="notes" class="form-label">Notes</label>
+            <textarea class="form-control" id="notes" name="notes" rows="3">{{ menu.notes if menu else '' }}</textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="image_file" class="form-label">Menu Image</label>
+            <div class="file-input-wrapper">
+                <input type="file" class="form-control" id="image_file" name="image_file" accept="image/*">
+            </div>
+            {% if menu and menu.image_url %}
+                <div class="menu-image-preview">
+                    <img src="{{ menu.image_url }}" alt="Current Menu Image">
+                </div>
+            {% endif %}
+        </div>
+        
+        <button type="submit" class="save-btn">
+            <i class="fas fa-save"></i>
+            Save Menu
+        </button>
+    </form>
+</div>
+
+<script>
+    // Add form submission animation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        submitBtn.disabled = true;
+    });
+</script>
+{% endblock %}
