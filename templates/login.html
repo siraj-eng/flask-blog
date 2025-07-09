@@ -1,31 +1,197 @@
 {% extends "base.html" %}
-
 {% block title %}Login - HR System{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-white border-0 pt-4">
-                <h3 class="text-center">Login to HR System</h3>
-            </div>
-            <div class="card-body">
-                <form method="POST">
-                    <div class="mb-3">
-                        <label for="username" class="form-label">Username</label>
-                        <input type="text" class="form-control" id="username" name="username" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
-                    </div>
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-orange">Login</button>
-                    </div>
-                </form>
-                <div class="text-center mt-3">
-                    <p class="mb-0">Don't have an account? <a href="{{ url_for('register') }}" class="text-orange">Register here</a></p>
+<style>
+    .auth-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        min-height: 100vh;
+    }
+
+    .auth-illustration {
+        background: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80') center/cover no-repeat;
+        display: flex;
+        position: relative;
+    }
+
+    .auth-illustration:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(79, 70, 229, 0.7);
+    }
+
+    .auth-form {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 4rem;
+        background: #ffffff;
+    }
+
+    .auth-form-container {
+        max-width: 400px;
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    .auth-form-logo {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #4f46e5;
+    }
+
+    .auth-form-logo-icon {
+        width: 40px;
+        height: 40px;
+        background: #4f46e5;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+
+    .auth-form-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: #111827;
+    }
+
+    .auth-form-subtitle {
+        color: #6b7280;
+        margin-bottom: 2rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #374151;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    }
+
+    .auth-form-footer {
+        margin-top: 1.5rem;
+        text-align: center;
+        color: #6b7280;
+    }
+
+    .auth-form-footer a {
+        color: #4f46e5;
+        font-weight: 500;
+        text-decoration: none;
+    }
+
+    .auth-form-footer a:hover {
+        text-decoration: underline;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        width: 100%;
+    }
+
+    .btn-primary {
+        background: #4f46e5;
+        color: white;
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background: #4338ca;
+        transform: translateY(-1px);
+    }
+
+    @media (max-width: 768px) {
+        .auth-container {
+            grid-template-columns: 1fr;
+        }
+
+        .auth-illustration {
+            display: none;
+        }
+
+        .auth-form {
+            padding: 2rem;
+        }
+    }
+</style>
+
+<div class="auth-container">
+    <!-- Building Image Side -->
+    <div class="auth-illustration"></div>
+
+    <!-- Form Side -->
+    <div class="auth-form">
+        <div class="auth-form-container">
+            <div class="auth-form-logo">
+                <div class="auth-form-logo-icon">
+                    <i class="fas fa-users"></i>
                 </div>
+                <span>TeamSync</span>
+            </div>
+
+            <h1 class="auth-form-title">Welcome Back</h1>
+            <p class="auth-form-subtitle">Sign in to access your HR dashboard</p>
+
+            <form method="POST">
+                <div class="form-group">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" class="form-control" id="username" name="username" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" required>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Sign In
+                    </button>
+                </div>
+            </form>
+
+            <div class="auth-form-footer">
+                <p>Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
             </div>
         </div>
     </div>
