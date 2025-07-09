@@ -1,3 +1,7 @@
+"""
+Main Flask application for HR System.
+Handles user authentication, dashboards, chat, notifications, HR/admin features, and file uploads.
+"""
 from flask import Flask, render_template, request, redirect, url_for, flash, session, g, make_response, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
@@ -16,6 +20,7 @@ from reportlab.platypus import Table, TableStyle, SimpleDocTemplate
 import io
 import time
 from werkzeug.utils import secure_filename
+from reportlab.platypus import Flowable
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 app.config['SECRET_KEY'] = 'b6cf94b299a1f56d63199b2298f7095c3ee344bd1bb1a77cfd6e03d4a2b95b71'
@@ -26,11 +31,13 @@ socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
 
 # Database Helper Functions
 def get_db():
+    """Connect to the configured SQLite database and return a connection with row factory."""
     db = sqlite3.connect(app.config['DATABASE'])
     db.row_factory = sqlite3.Row
     return db
 
 def init_db():
+    """Initialize the database with all required tables and default data."""
     db = get_db()
     try:
         # Drop existing tables if they exist
@@ -196,6 +203,7 @@ def init_db():
         db.close()
 
 def initialize_database():
+    """Check if the database exists and is valid, otherwise initialize it."""
     if not os.path.exists(app.config['DATABASE']):
         print("🔄 Creating new database...")
         init_db()
@@ -220,6 +228,7 @@ initialize_database()
 
 # Decorators
 def login_required(f):
+    """Decorator to require login for a route."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
@@ -229,6 +238,7 @@ def login_required(f):
     return decorated_function
 
 def admin_required(f):
+    """Decorator to require admin role for a route."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
@@ -241,6 +251,7 @@ def admin_required(f):
     return decorated_function
 
 def hr_required(f):
+    """Decorator to require HR or admin role for a route."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
@@ -683,13 +694,17 @@ def handle_disconnect():
 def handle_join_room(data):
     room = data.get('room')
     join_room(room)
-    emit('receive_message', {'username': 'System', 'message': f'{session.get("full_name", session.get("username"))} joined the room.'}, room=room)
+    # Only emit to room if room is not None and emit supports 'room' param
+    if room:
+        # Flask-SocketIO emit supports 'to' instead of 'room' in recent versions
+        emit('receive_message', {'username': 'System', 'message': f'{session.get("full_name", session.get("username"))} joined the room.'}, to=room)
 
 @socketio.on('leave_room')
 def handle_leave_room(data):
     room = data.get('room')
     leave_room(room)
-    emit('receive_message', {'username': 'System', 'message': f'{session.get("full_name", session.get("username"))} left the room.'}, room=room)
+    if room:
+        emit('receive_message', {'username': 'System', 'message': f'{session.get("full_name", session.get("username"))} left the room.'}, to=room)
 
 @socketio.on('send_message')
 def handle_send_message(data):
@@ -706,7 +721,7 @@ def handle_send_message(data):
     if file_url:
         payload['file_url'] = file_url
     if room:
-        emit('receive_message', payload, room=room)
+        emit('receive_message', payload, to=room)
     else:
         emit('receive_message', payload, broadcast=True)
 
@@ -956,7 +971,8 @@ def hr_employees_export_pdf():
         ('BACKGROUND', (0, 1), (-1, -1), colors.white),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
     ]))
-    elements = [table]
+    # --- PDF Export: Fix Table/Flowable typing ---
+    elements: list[Flowable] = [table]  # type: ignore
     doc.build(elements)
     buffer.seek(0)
     return app.response_class(buffer, mimetype='application/pdf', headers={'Content-Disposition': 'attachment; filename=employees.pdf'})
@@ -1246,7 +1262,7 @@ def hr_lunch_menu():
             image_url = request.form.get('image_url', '').strip()
             file = request.files.get('image_file')
             if file and allowed_file(file.filename):
-                filename = secure_filename(f"{today}_" + file.filename)
+                filename = secure_filename(f"{today}_" + str(file.filename))
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                 image_url = url_for('static', filename=f'uploads/{filename}')
             if menu:
@@ -1270,7 +1286,7 @@ def chat_upload_file():
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
     if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
+        filename = secure_filename(str(file.filename))
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         file_url = url_for('static', filename=f'uploads/{filename}')
         return jsonify({'file_url': file_url}), 200

@@ -1,3 +1,6 @@
+"""
+Helper functions for dashboard data, notifications, comments, lunch orders, and chat messages.
+"""
 from datetime import datetime
 from flask import session
 from db import get_db
@@ -5,6 +8,7 @@ from db import get_db
 # User dashboard data
 
 def get_user_dashboard_data(user_id):
+    """Return dashboard data for a user: announcements, lunch orders, comments, notifications, chat messages."""
     with get_db() as db:
         announcements = db.execute(
             'SELECT a.*, u.full_name as author_name FROM announcements a JOIN users u ON a.author_id = u.id ORDER BY a.created_at DESC LIMIT 5'
@@ -36,6 +40,7 @@ def get_user_dashboard_data(user_id):
 # Admin dashboard data
 
 def get_admin_dashboard_data():
+    """Return dashboard data for admin: user count, recent users, announcements, lunch orders."""
     with get_db() as db:
         user_count = db.execute('SELECT COUNT(*) FROM users').fetchone()[0]
         recent_users = db.execute('SELECT * FROM users ORDER BY created_at DESC LIMIT 5').fetchall()
@@ -59,6 +64,7 @@ def get_admin_dashboard_data():
 # HR dashboard data
 
 def get_hr_dashboard_data():
+    """Return dashboard data for HR: announcements and employee list."""
     with get_db() as db:
         announcements = db.execute(
             'SELECT a.*, u.full_name as author_name FROM announcements a JOIN users u ON a.author_id = u.id ORDER BY a.created_at DESC LIMIT 5'
@@ -71,6 +77,7 @@ def get_hr_dashboard_data():
 # Notification helpers
 
 def get_user_notifications(user_id, unread_only=False):
+    """Return notifications for a user. If unread_only is True, only return unread notifications."""
     with get_db() as db:
         if unread_only:
             notifications = db.execute(
@@ -85,6 +92,7 @@ def get_user_notifications(user_id, unread_only=False):
 # Comments helpers
 
 def get_user_comments(user_id):
+    """Return all comments made by a user, with announcement titles."""
     with get_db() as db:
         comments = db.execute(
             'SELECT c.*, a.title as announcement_title FROM comments c JOIN announcements a ON c.announcement_id = a.id WHERE c.user_id = ? ORDER BY c.created_at DESC', (user_id,)
@@ -94,6 +102,7 @@ def get_user_comments(user_id):
 # Lunch order helpers
 
 def get_user_lunch_orders(user_id):
+    """Return all lunch orders made by a user."""
     with get_db() as db:
         orders = db.execute(
             'SELECT * FROM lunch_orders WHERE user_id = ? ORDER BY created_at DESC', (user_id,)
@@ -103,6 +112,7 @@ def get_user_lunch_orders(user_id):
 # Chat helpers
 
 def get_recent_chat_messages(limit=10):
+    """Return the most recent chat messages (public room)."""
     with get_db() as db:
         messages = db.execute(
             'SELECT username, message, created_at FROM chat_messages ORDER BY created_at DESC LIMIT ?', (limit,)

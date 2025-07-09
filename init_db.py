@@ -1,8 +1,14 @@
+"""
+Database initialization script for HR system (SQLite).
+Creates tables and indexes if they do not exist.
+"""
 import sqlite3
 
 def create_db():
+    """Create all required tables and indexes for the HR system database."""
     conn = sqlite3.connect('hr_system.db')
     c = conn.cursor()
+    # Users table
     c.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -11,6 +17,7 @@ def create_db():
             password_hash TEXT NOT NULL
         )
     ''')
+    # Lunch orders table
     c.execute('''
         CREATE TABLE IF NOT EXISTS lunch_orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -22,6 +29,7 @@ def create_db():
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
     ''')
+    # Comments table
     c.execute('''
         CREATE TABLE IF NOT EXISTS comments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -33,6 +41,7 @@ def create_db():
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
     ''')
+    # Chat messages table
     c.execute('''
         CREATE TABLE IF NOT EXISTS chat_messages (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -43,6 +52,7 @@ def create_db():
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
     ''')
+    # Chat rooms table
     c.execute('''
         CREATE TABLE IF NOT EXISTS chat_rooms (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -50,6 +60,7 @@ def create_db():
             is_private INTEGER DEFAULT 0
         )
     ''')
+    # Chat room members table
     c.execute('''
         CREATE TABLE IF NOT EXISTS chat_room_members (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -59,6 +70,7 @@ def create_db():
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
     ''')
+    # Lunch menus table
     c.execute('''
         CREATE TABLE IF NOT EXISTS lunch_menus (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -73,7 +85,7 @@ def create_db():
     conn.close()
     print("✅ users.db created successfully.")
 
-    # Add these index creation statements at the end of your DB initialization script
+    # Add indexes for performance
     conn = sqlite3.connect('hr_system.db')
     c = conn.cursor()
     c.execute('CREATE INDEX IF NOT EXISTS idx_complaints_user_status ON complaints(user_id, status)')
