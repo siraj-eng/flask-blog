@@ -521,6 +521,18 @@
               <span>Announcements</span>
             </a>
           </li>
+          <li class="nav-item">
+            <a href="{{ url_for('admin_events') }}" class="nav-link">
+              <i class="fas fa-calendar-alt"></i>
+              <span>Events</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('admin_support') }}" class="nav-link">
+              <i class="fas fa-question-circle"></i>
+              <span>Help & Support</span>
+            </a>
+          </li>
         </ul>
       </div>
       
@@ -754,6 +766,28 @@
             <p>No announcements yet</p>
           </div>
           {% endif %}
+        </div>
+        <!-- Events Section -->
+        <div class="content-section">
+          <div class="section-header">
+            <h2 class="section-title"><i class="fas fa-calendar-alt"></i> Events</h2>
+            <a href="{{ url_for('admin_events') }}" class="btn btn-sm">
+              <i class="fas fa-calendar-plus"></i>
+              Manage
+            </a>
+          </div>
+          <div class="text-muted">Upcoming events will appear here. <a href="{{ url_for('admin_events') }}">Go to Events</a></div>
+        </div>
+        <!-- Help & Support Section -->
+        <div class="content-section">
+          <div class="section-header">
+            <h2 class="section-title"><i class="fas fa-question-circle"></i> Help & Support</h2>
+            <a href="{{ url_for('admin_support') }}" class="btn btn-sm">
+              <i class="fas fa-question"></i>
+              Get Help
+            </a>
+          </div>
+          <div class="text-muted">Need assistance? Visit the <a href="{{ url_for('admin_support') }}">Help & Support</a> page for FAQs or to contact support.</div>
         </div>
       </div>
     </div>

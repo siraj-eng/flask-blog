@@ -1,155 +1,413 @@
 {% extends "base.html" %}
 {% block title %}System Settings - Admin{% endblock %}
 {% block content %}
-<div class="dashboard-container" style="display: flex; min-height: 100vh;">
-  <!-- Main Content -->
-  <div class="main-content" style="flex: 1; padding: 2rem;">
-    <div class="container py-4">
-      <h2 class="mb-4">System Settings</h2>
-      <!-- Change Admin Email/Password -->
-      <div class="card mb-4">
-        <div class="card-header"><h5>Change Admin Email & Password</h5></div>
-        <div class="card-body">
-          <form method="POST" action="{{ url_for('admin_settings') }}">
-            <input type="hidden" name="form_type" value="admin_account">
-            <div class="form-group">
-              <label class="form-label">Email</label>
-              <input type="email" class="form-control" name="admin_email" value="{{ admin.email }}" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">New Password</label>
-              <input type="password" class="form-control" name="new_password" placeholder="Leave blank to keep current">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Confirm Password</label>
-              <input type="password" class="form-control" name="confirm_password" placeholder="Leave blank to keep current">
-            </div>
-            <button type="submit" class="btn btn-primary">Update Account</button>
-          </form>
-        </div>
-      </div>
-      <!-- Notification Preferences -->
-      <div class="card mb-4">
-        <div class="card-header"><h5>Notification Preferences</h5></div>
-        <div class="card-body">
-          <form method="POST" action="{{ url_for('admin_settings') }}">
-            <input type="hidden" name="form_type" value="notifications">
-            <div class="form-group">
-              <label><input type="checkbox" name="notify_new_user" {% if notify_new_user %}checked{% endif %}> Notify on new user registration</label>
-            </div>
-            <div class="form-group">
-              <label><input type="checkbox" name="notify_new_announcement" {% if notify_new_announcement %}checked{% endif %}> Notify on new announcement</label>
-            </div>
-            <button type="submit" class="btn btn-primary">Save Preferences</button>
-          </form>
-        </div>
-      </div>
-      <!-- Company Info -->
-      <div class="card mb-4">
-        <div class="card-header"><h5>Company/Organization Info</h5></div>
-        <div class="card-body">
-          <form method="POST" action="{{ url_for('admin_settings') }}" enctype="multipart/form-data">
-            <input type="hidden" name="form_type" value="company_info">
-            <div class="form-group">
-              <label class="form-label">Company Name</label>
-              <input type="text" class="form-control" name="company_name" value="{{ company_name }}">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Contact Email</label>
-              <input type="email" class="form-control" name="company_contact" value="{{ company_contact }}">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Logo</label>
-              <input type="file" class="form-control" name="company_logo">
-              {% if company_logo_url %}
-                <img src="{{ company_logo_url }}" alt="Logo" style="max-height: 60px; margin-top: 8px;">
-              {% endif %}
-            </div>
-            <button type="submit" class="btn btn-primary">Update Info</button>
-          </form>
-        </div>
-      </div>
-      <!-- Registration Settings -->
-      <div class="card mb-4">
-        <div class="card-header"><h5>User Registration Settings</h5></div>
-        <div class="card-body">
-          <form method="POST" action="{{ url_for('admin_settings') }}">
-            <input type="hidden" name="form_type" value="registration">
-            <div class="form-group">
-              <label><input type="checkbox" name="registration_enabled" {% if registration_enabled %}checked{% endif %}> Enable user self-registration</label>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Default Role</label>
-              <select class="form-control" name="default_role">
-                <option value="user" {% if default_role == 'user' %}selected{% endif %}>User</option>
-                <option value="hr" {% if default_role == 'hr' %}selected{% endif %}>HR</option>
-              </select>
-            </div>
-            <button type="submit" class="btn btn-primary">Save Settings</button>
-          </form>
-        </div>
-      </div>
-      <!-- Data Export/Backup -->
-      <div class="card mb-4">
-        <div class="card-header"><h5>Data Export / Backup</h5></div>
-        <div class="card-body">
-          <a href="{{ url_for('admin_user_report') }}" class="btn btn-success mb-2">Download Users CSV</a>
-          <a href="{{ url_for('admin_user_report_pdf') }}" class="btn btn-danger mb-2">Download Users PDF</a>
-          <a href="{{ url_for('admin_lunch_orders_report') }}" class="btn btn-success mb-2">Download Lunch Orders CSV</a>
-        </div>
-      </div>
-      <!-- Session Timeout/Security -->
-      <div class="card mb-4">
-        <div class="card-header"><h5>Session Timeout / Security</h5></div>
-        <div class="card-body">
-          <form method="POST" action="{{ url_for('admin_settings') }}">
-            <input type="hidden" name="form_type" value="session">
-            <div class="form-group">
-              <label class="form-label">Session Timeout (minutes)</label>
-              <input type="number" class="form-control" name="session_timeout" min="5" max="1440" value="{{ session_timeout or 30 }}">
-            </div>
-            <button type="submit" class="btn btn-primary">Update Timeout</button>
-          </form>
-        </div>
-      </div>
-      <!-- Announcement Banner -->
-      <div class="card mb-4">
-        <div class="card-header"><h5>Custom Announcement Banner</h5></div>
-        <div class="card-body">
-          <form method="POST" action="{{ url_for('admin_settings') }}">
-            <input type="hidden" name="form_type" value="banner">
-            <div class="form-group">
-              <label class="form-label">Banner Message</label>
-              <input type="text" class="form-control" name="banner_message" value="{{ banner_message }}">
-            </div>
-            <button type="submit" class="btn btn-primary">Update Banner</button>
-          </form>
-        </div>
-      </div>
-      <!-- Reset System Data -->
-      <div class="card mb-4">
-        <div class="card-header"><h5>Reset System Data</h5></div>
-        <div class="card-body">
-          <form method="POST" action="{{ url_for('admin_settings') }}" onsubmit="return confirm('Are you sure you want to reset all demo/sample data? This cannot be undone.');">
-            <input type="hidden" name="form_type" value="reset">
-            <button type="submit" class="btn btn-danger">Reset Demo Data</button>
-          </form>
-        </div>
-      </div>
-      <!-- Manage Roles & Permissions -->
-      <div class="card mb-4">
-        <div class="card-header"><h5>Manage Roles & Permissions</h5></div>
-        <div class="card-body">
-          <p class="text-muted">Role management is currently limited. For advanced permissions, please contact the developer.</p>
-          <ul>
-            <li>Admin: Full access</li>
-            <li>HR: HR dashboard, manage users, announcements</li>
-            <li>User: Regular user access</li>
-          </ul>
-        </div>
-      </div>
-      <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary mt-3">Back to Dashboard</a>
+<style>
+:root {
+    --primary: #4f46e5; /* Dashboard Blue */
+    --primary-light: #6366f1;
+    --primary-dark: #4338ca;
+    --primary-50: #e3f2fd;
+    --secondary: #212121; /* Dark gray */
+    --accent: #4f46e5;
+    --light: #f8f9fa;
+    --dark: #212121;
+    --success: #4f46e5;
+    --warning: #ffaa00;
+    --danger: #ef233c;
+    --text-primary: #212121;
+    --text-secondary: #4b5563;
+    --text-muted: #6b7280;
+    --bg-primary: #f8f9fa;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f1f5f9;
+    --border-color: #e5e7eb;
+    --border-light: #f3f4f6;
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+}
+
+.dashboard-container {
+    padding: 2rem;
+    min-height: 100vh;
+    background-color: var(--bg-primary);
+}
+
+.settings-header {
+    margin-bottom: 2rem;
+}
+
+.settings-header h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.settings-header p {
+    color: var(--text-secondary);
+    max-width: 600px;
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.card {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+
+.card-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.card-header h5 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    background-color: var(--bg-secondary);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    margin-bottom: 0.75rem;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+    background: var(--secondary);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #000;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #d90429;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-success {
+    background: var(--success);
+    color: white;
+}
+
+.btn-success:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.export-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.75rem;
+}
+
+@media (max-width: 768px) {
+    .settings-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .export-actions {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<div class="dashboard-container">
+    <!-- Header Section -->
+    <div class="settings-header">
+        <h1>System Settings</h1>
+        <p>Configure system preferences and manage administrative settings</p>
     </div>
-  </div>
+
+    <!-- Settings Grid -->
+    <div class="settings-grid">
+        <!-- Admin Account Settings -->
+        <div class="card">
+            <div class="card-header">
+                <h5>Admin Account</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin_settings') }}">
+                    <input type="hidden" name="form_type" value="admin_account">
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="admin_email" value="{{ admin.email }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">New Password</label>
+                        <input type="password" class="form-control" name="new_password" placeholder="Leave blank to keep current">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirm Password</label>
+                        <input type="password" class="form-control" name="confirm_password" placeholder="Leave blank to keep current">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update Account</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Notification Preferences -->
+        <div class="card">
+            <div class="card-header">
+                <h5>Notification Preferences</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin_settings') }}">
+                    <input type="hidden" name="form_type" value="notifications">
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="notify_new_user" {% if notify_new_user %}checked{% endif %}>
+                            Notify on new user registration
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="notify_new_announcement" {% if notify_new_announcement %}checked{% endif %}>
+                            Notify on new announcement
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Preferences</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Company Info -->
+        <div class="card">
+            <div class="card-header">
+                <h5>Company Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin_settings') }}" enctype="multipart/form-data">
+                    <input type="hidden" name="form_type" value="company_info">
+                    <div class="form-group">
+                        <label class="form-label">Company Name</label>
+                        <input type="text" class="form-control" name="company_name" value="{{ company_name }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Contact Email</label>
+                        <input type="email" class="form-control" name="company_contact" value="{{ company_contact }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Logo</label>
+                        <input type="file" class="form-control" name="company_logo">
+                        {% if company_logo_url %}
+                        <div class="mt-2">
+                            <img src="{{ company_logo_url }}" alt="Current Logo" style="max-height: 60px; border-radius: var(--radius-sm);">
+                        </div>
+                        {% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update Info</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Registration Settings -->
+        <div class="card">
+            <div class="card-header">
+                <h5>User Registration</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin_settings') }}">
+                    <input type="hidden" name="form_type" value="registration">
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="registration_enabled" {% if registration_enabled %}checked{% endif %}>
+                            Enable user self-registration
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Default Role</label>
+                        <select class="form-control" name="default_role">
+                            <option value="user" {% if default_role == 'user' %}selected{% endif %}>User</option>
+                            <option value="hr" {% if default_role == 'hr' %}selected{% endif %}>HR</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Session Settings -->
+        <div class="card">
+            <div class="card-header">
+                <h5>Session Settings</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin_settings') }}">
+                    <input type="hidden" name="form_type" value="session">
+                    <div class="form-group">
+                        <label class="form-label">Session Timeout (minutes)</label>
+                        <input type="number" class="form-control" name="session_timeout" min="5" max="1440" value="{{ session_timeout or 30 }}">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update Timeout</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Announcement Banner -->
+        <div class="card">
+            <div class="card-header">
+                <h5>Announcement Banner</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin_settings') }}">
+                    <input type="hidden" name="form_type" value="banner">
+                    <div class="form-group">
+                        <label class="form-label">Banner Message</label>
+                        <input type="text" class="form-control" name="banner_message" value="{{ banner_message }}">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update Banner</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Full Width Cards -->
+    <div class="settings-grid" style="grid-template-columns: 1fr;">
+        <!-- Data Export -->
+        <div class="card">
+            <div class="card-header">
+                <h5>Data Export</h5>
+            </div>
+            <div class="card-body">
+                <div class="export-actions">
+                    <a href="{{ url_for('admin_user_report') }}" class="btn btn-success">
+                        Download Users CSV
+                    </a>
+                    <a href="{{ url_for('admin_user_report_pdf') }}" class="btn btn-danger">
+                        Download Users PDF
+                    </a>
+                    <a href="{{ url_for('admin_lunch_orders_report') }}" class="btn btn-success">
+                        Download Lunch Orders CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Reset -->
+        <div class="card">
+            <div class="card-header">
+                <h5>System Reset</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin_settings') }}" onsubmit="return confirm('Are you sure you want to reset all demo/sample data? This cannot be undone.');">
+                    <input type="hidden" name="form_type" value="reset">
+                    <button type="submit" class="btn btn-danger">
+                        Reset Demo Data
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Roles & Permissions -->
+        <div class="card">
+            <div class="card-header">
+                <h5>Roles & Permissions</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Role management is currently limited. For advanced permissions, please contact the developer.</p>
+                <ul style="list-style: none; padding: 0; margin: 1rem 0;">
+                    <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-light);">
+                        <strong>Admin:</strong> Full system access
+                    </li>
+                    <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-light);">
+                        <strong>HR:</strong> HR dashboard, manage users, announcements
+                    </li>
+                    <li style="padding: 0.5rem 0;">
+                        <strong>User:</strong> Regular user access
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+        Back to Dashboard
+    </a>
 </div>
-{% endblock %} 
+{% endblock %}
