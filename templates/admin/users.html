@@ -1,117 +1,381 @@
 {% extends "base.html" %}
-
-{% block title %}Admin Dashboard - HR System{% endblock %}
+{% block title %}User Management - HR System{% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
-    <div class="sidebar">
-        <h5 class="mb-4">Admin Menu</h5>
-        <ul class="sidebar-menu">
-            <li><a href="{{ url_for('admin_dashboard') }}" class="active"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
-            <li><a href="{{ url_for('admin_users') }}"><i class="fas fa-users me-2"></i>User Management</a></li>
-            <li><a href="#"><i class="fas fa-cog me-2"></i>System Settings</a></li>
-            <li><a href="#"><i class="fas fa-chart-pie me-2"></i>Reports</a></li>
-            <li><a href="#"><i class="fas fa-bell me-2"></i>Notifications</a></li>
+<style>
+  :root {
+    --primary: #4f46e5;
+    --primary-light: #6366f1;
+    --primary-dark: #4338ca;
+    --secondary: #f59e0b;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --info: #3b82f6;
+    --text-primary: #111827;
+    --text-secondary: #374151;
+    --text-muted: #6b7280;
+    --bg-primary: #f9fafb;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f3f4f6;
+    --border-color: #e5e7eb;
+    --border-light: #f3f4f6;
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+
+  body {
+    background-color: var(--bg-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  .container {
+    max-width: 1400px;
+    padding: 2rem;
+  }
+
+  /* Header Styles */
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .page-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  /* Search and Action Bar */
+  .action-bar {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+
+  .search-form {
+    flex: 1;
+    max-width: 400px;
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  /* Card Styles */
+  .card {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 2rem;
+    overflow: hidden;
+  }
+
+  .card-header {
+    background-color: var(--bg-tertiary);
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .card-body {
+    padding: 1.5rem;
+  }
+
+  /* Table Styles */
+  .table-responsive {
+    overflow-x: auto;
+  }
+
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .table thead th {
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+    font-weight: 600;
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 2px solid var(--border-color);
+  }
+
+  .table tbody td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: middle;
+  }
+
+  .table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .table tbody tr:hover {
+    background-color: var(--bg-tertiary);
+  }
+
+  /* Form Elements */
+  .form-select, .form-control {
+    padding: 0.625rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+  }
+
+  .form-select:focus, .form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+  }
+
+  .form-select-sm {
+    padding: 0.375rem 2.25rem 0.375rem 0.75rem;
+    font-size: 0.75rem;
+  }
+
+  /* Button Styles */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+
+  .btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+  }
+
+  .btn-primary {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+  }
+
+  .btn-primary:hover {
+    background-color: var(--primary-dark);
+  }
+
+  .btn-outline-primary {
+    background-color: transparent;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+  }
+
+  .btn-outline-primary:hover {
+    background-color: rgba(79, 70, 229, 0.05);
+  }
+
+  .btn-warning {
+    background-color: var(--warning);
+    color: white;
+    border: none;
+  }
+
+  .btn-danger {
+    background-color: var(--danger);
+    color: white;
+    border: none;
+  }
+
+  .btn-secondary {
+    background-color: var(--text-muted);
+    color: white;
+    border: none;
+  }
+
+  /* Pagination */
+  .pagination {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .page-item.disabled .page-link {
+    color: var(--text-muted);
+    pointer-events: none;
+    background-color: var(--bg-tertiary);
+  }
+
+  .page-item.active .page-link {
+    background-color: var(--primary);
+    border-color: var(--primary);
+  }
+
+  .page-link {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--primary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .page-link:hover {
+    background-color: var(--bg-tertiary);
+  }
+
+  /* Sort Links */
+  .sort-link {
+    color: var(--text-primary);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .sort-link:hover {
+    color: var(--primary);
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-muted);
+  }
+
+  .empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .action-bar {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .search-form {
+      max-width: 100%;
+    }
+  }
+</style>
+
+<div class="container">
+  <div class="page-header">
+    <h1 class="page-title">User Management</h1>
+  </div>
+
+  <div class="action-bar">
+    <form method="get" class="search-form">
+      <input type="text" name="q" class="form-control" placeholder="Search users..." value="{{ q or '' }}">
+      <button type="submit" class="btn btn-outline-primary">Search</button>
+    </form>
+    <a href="{{ url_for('admin_add_user') }}" class="btn btn-primary">Add User</a>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">All Users</h2>
+    </div>
+    <div class="card-body">
+      {% if users %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              {% macro sort_link(col, label) %}
+                {%- set new_order = 'asc' if sort != col or order == 'desc' else 'desc' -%}
+                <th><a href="?q={{ q }}&page={{ page }}&sort={{ col }}&order={{ new_order }}" class="sort-link">
+                  {{ label }}
+                  {% if sort == col %}
+                    {% if order == 'asc' %}&#9650;{% else %}&#9660;{% endif %}
+                  {% endif %}
+                </a></th>
+              {% endmacro %}
+              {{ sort_link('username', 'Username') }}
+              {{ sort_link('full_name', 'Full Name') }}
+              {{ sort_link('email', 'Email') }}
+              {{ sort_link('role', 'Role') }}
+              {{ sort_link('department', 'Department') }}
+              {{ sort_link('position', 'Position') }}
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users %}
+            <tr>
+              <td>{{ user.username }}</td>
+              <td>{{ user.full_name or '-' }}</td>
+              <td>{{ user.email }}</td>
+              <td>
+                <form method="POST" action="{{ url_for('admin_change_user_role', user_id=user.id) }}?q={{ q }}&page={{ page }}" class="d-inline">
+                  <select name="role" class="form-select form-select-sm" onchange="this.form.submit()" {% if user.id == session['user_id'] %}disabled{% endif %}>
+                    <option value="user" {% if user.role == 'user' %}selected{% endif %}>User</option>
+                    <option value="hr" {% if user.role == 'hr' %}selected{% endif %}>HR</option>
+                    <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                  </select>
+                </form>
+              </td>
+              <td>{{ user.department or '-' }}</td>
+              <td>{{ user.position or '-' }}</td>
+              <td>
+                <div style="display: flex; gap: 0.5rem;">
+                  <a href="{{ url_for('admin_edit_user', user_id=user.id) }}?q={{ q }}&page={{ page }}" class="btn btn-sm btn-warning">Edit</a>
+                  {% if user.id != session['user_id'] %}
+                  <form method="POST" action="{{ url_for('admin_delete_user', user_id=user.id) }}?q={{ q }}&page={{ page }}" style="display:inline;" onsubmit="return confirm('Delete this user?');">
+                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                  </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <nav aria-label="User pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+          <li class="page-item {% if page == 1 %}disabled{% endif %}">
+            <a class="page-link" href="?q={{ q }}&page={{ page-1 }}">Previous</a>
+          </li>
+          {% for p in range(1, total_pages+1) %}
+            <li class="page-item {% if p == page %}active{% endif %}">
+              <a class="page-link" href="?q={{ q }}&page={{ p }}">{{ p }}</a>
+            </li>
+          {% endfor %}
+          <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+            <a class="page-link" href="?q={{ q }}&page={{ page+1 }}">Next</a>
+          </li>
         </ul>
+        <div class="text-center text-muted mt-2">Page {{ page }} of {{ total_pages }}</div>
+      </nav>
+      {% else %}
+      <div class="empty-state">
+        <i class="fas fa-user-slash"></i>
+        <p>No users found</p>
+      </div>
+      {% endif %}
     </div>
-    <div class="main-content">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Admin Dashboard</h2>
-            <div class="text-muted">Welcome, {{ session.get('full_name', session.get('username')) }}</div>
-        </div>
-
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="widget text-center">
-                    <i class="fas fa-users widget-icon"></i>
-                    <h3>{{ user_count }}</h3>
-                    <p class="text-muted">Total Users</p>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="widget text-center">
-                    <i class="fas fa-user-tie widget-icon"></i>
-                    <h3>5</h3>
-                    <p class="text-muted">HR Staff</p>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="widget text-center">
-                    <i class="fas fa-user-check widget-icon"></i>
-                    <h3>42</h3>
-                    <p class="text-muted">Active Today</p>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="widget text-center">
-                    <i class="fas fa-clock widget-icon"></i>
-                    <h3>3</h3>
-                    <p class="text-muted">Pending Approvals</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">Recent Users</h5>
-                    </div>
-                    <div class="card-body">
-                        {% if recent_users %}
-                            <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Username</th>
-                                            <th>Email</th>
-                                            <th>Role</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for user in recent_users %}
-                                        <tr>
-                                            <td>{{ user.username }}</td>
-                                            <td>{{ user.email }}</td>
-                                            <td><span class="badge bg-{{ 'orange' if user.role == 'hr' else 'green' if user.role == 'admin' else 'secondary' }}">{{ user.role }}</span></td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        {% else %}
-                            <p class="text-muted">No users found.</p>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card mb-4">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Recent Announcements</h5>
-                        <a href="#" class="btn btn-sm btn-orange">New Announcement</a>
-                    </div>
-                    <div class="card-body">
-                        {% if announcements %}
-                            <div class="list-group">
-                                {% for announcement in announcements %}
-                                <div class="list-group-item border-0">
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <h6 class="mb-1">{{ announcement.title }}</h6>
-                                        <small class="text-muted">{{ announcement.created_at[:10] }}</small>
-                                    </div>
-                                    <p class="mb-1">{{ announcement.content[:100] }}...</p>
-                                    <small class="text-muted">Posted by {{ announcement.author_name }}</small>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <p class="text-muted">No announcements yet.</p>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+  </div>
 </div>
 {% endblock %}

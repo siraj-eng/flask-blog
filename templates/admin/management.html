@@ -275,65 +275,96 @@
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <h3>SoftNet</h3>
-            <p>Internal Portal</p>
-        </div>
-        <div class="sidebar-menu">
-            <ul class="nav flex-column">
-                <li class="nav-item">
-                    <a href="{{ url_for('admin_dashboard') }}" class="nav-link active">
-                        <i class="fas fa-tachometer-alt"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ url_for('admin_users') }}" class="nav-link">
-                        <i class="fas fa-users"></i>
-                        <span>Team Members</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="fas fa-bullhorn"></i>
-                        <span>Announcements</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="fas fa-calendar"></i>
-                        <span>Events</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="fas fa-cog"></i>
-                        <span>Settings</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ url_for('chat') }}" class="nav-link">
-                        <i class="fas fa-comments"></i>
-                        <span>Team Chat</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="main-content">
-        <div class="dashboard-header">
-            <div class="greeting">Management
-                <span class="role-badge">{{ session.get('role', '').capitalize() }}</span>
+<div class="dashboard-container" style="display: flex; min-height: 100vh;">
+  <!-- Sidebar -->
+  <aside class="sidebar bg-white shadow-sm rounded p-3" style="width: 240px; min-height: 100vh;">
+    <h5 class="mb-4 text-green">Admin Menu</h5>
+    <ul class="nav flex-column" style="padding-left: 0;">
+      <style>
+        .admin-bullet-nav .nav-item {
+          position: relative;
+          padding-left: 24px;
+          margin-bottom: 8px;
+        }
+        .admin-bullet-nav .nav-item:before {
+          content: "\2022";
+          position: absolute;
+          left: 8px;
+          color: #00c853;
+          font-size: 1.2em;
+        }
+        .admin-bullet-nav .nav-link {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          color: #212121;
+          text-decoration: none;
+          font-weight: 500;
+          border-radius: 6px;
+          padding: 8px 12px;
+          transition: background 0.2s, color 0.2s;
+        }
+        .admin-bullet-nav .nav-link.active, .admin-bullet-nav .nav-link:hover {
+          background: #e8f5e9;
+          color: #00c853;
+        }
+      </style>
+      <div class="admin-bullet-nav">
+        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_dashboard') }}"><i class="fas fa-home me-2"></i>Admin Dashboard</a></li>
+        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_users') }}"><i class="fas fa-users me-2"></i>User Management</a></li>
+        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_hr_staff') }}"><i class="fas fa-user-tie me-2"></i>HR Staff & Permissions</a></li>
+        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_announcements') }}"><i class="fas fa-bullhorn me-2"></i>Announcements</a></li>
+        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_settings') }}"><i class="fas fa-cog me-2"></i>System Settings</a></li>
+        <li class="nav-item mb-2"><a class="nav-link active" href="{{ url_for('admin_management') }}"><i class="fas fa-chart-pie me-2"></i>Reports</a></li>
+        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_notifications') }}"><i class="fas fa-bell me-2"></i>Notifications</a></li>
+        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_events') }}"><i class="fas fa-calendar-alt me-2"></i>Events/Calendar</a></li>
+        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_activity_log') }}"><i class="fas fa-clipboard-list me-2"></i>Activity Log</a></li>
+        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_support') }}"><i class="fas fa-question-circle me-2"></i>Support/Help</a></li>
+        <li class="nav-item mt-4"><a class="nav-link text-danger" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+      </div>
+    </ul>
+  </aside>
+  <!-- Main Content -->
+  <div class="main-content" style="flex: 1; padding: 2rem;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <div class="dashboard-header mb-0">
+                    <div class="greeting">System Reports
+                        <span class="role-badge">{{ session.get('role', '').capitalize() }}</span>
+                    </div>
+                    <div class="subtext">Download and view system-wide reports and logs.</div>
+                </div>
             </div>
-            <div class="subtext">Manage all users in the system here.</div>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
         </div>
-
-        <div class="dashboard-widgets">
+        <!-- System Reports Widget (full width) -->
+        <div class="mb-4">
+            <div class="widget-card" style="width:100%;">
+                <div class="widget-icon">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <div class="section-title">
+                    <i class="fas fa-chart-pie"></i> System Reports
+                </div>
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <span class="fw-semibold">User Report</span>
+                        <a href="{{ url_for('admin_user_report') }}" class="btn btn-sm btn-primary ms-2">Download CSV</a>
+                        <a href="{{ url_for('admin_user_report_pdf') }}" class="btn btn-sm btn-danger ms-2">Download PDF</a>
+                    </li>
+                    <li class="mb-2">
+                        <span class="fw-semibold">Lunch Orders Report</span>
+                        <a href="{{ url_for('admin_lunch_orders_report') }}" class="btn btn-sm btn-primary ms-2">Download</a>
+                    </li>
+                    <li class="mb-2">
+                        <span class="fw-semibold">Activity Log</span>
+                        <a href="{{ url_for('admin_activity_log') }}" class="btn btn-sm btn-primary ms-2">View</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <!-- Other widgets in a two-column grid -->
+        <div class="dashboard-widgets" style="grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));">
             <!-- Notifications Widget -->
             <div class="widget-card">
                 <div class="widget-icon">
@@ -353,7 +384,7 @@
                         </li>
                         {% endfor %}
                     </ul>
-                    <a href="#" class="btn btn-primary mt-2 w-100">View All</a>
+                    <a href="{{ url_for('admin_notifications') }}" class="btn btn-primary mt-2 w-100">View All</a>
                 {% else %}
                     <div class="text-center py-2 text-muted">
                         <i class="fas fa-check-circle fa-2x mb-2" style="color: var(--primary); opacity: 0.5;"></i>
@@ -361,7 +392,6 @@
                     </div>
                 {% endif %}
             </div>
-
             <!-- Lunch Order Widget -->
             <div class="widget-card">
                 <div class="widget-icon">
@@ -398,7 +428,6 @@
                     </div>
                 {% endif %}
             </div>
-
             <!-- Announcements Widget -->
             <div class="widget-card">
                 <div class="widget-icon">
@@ -427,7 +456,6 @@
                     </div>
                 {% endif %}
             </div>
-
             <!-- Quick Actions Widget -->
             <div class="widget-card">
                 <div class="widget-icon">
@@ -437,26 +465,23 @@
                     <i class="fas fa-bolt"></i> Quick Actions
                 </div>
                 <div class="d-grid gap-2">
-                    <a href="{{ url_for('chat') }}" class="btn btn-primary">
+                    <a href="{{ url_for('admin_add_user') }}" class="btn btn-primary">
+                        <i class="fas fa-user-plus me-2"></i> Add User
+                    </a>
+                    <a href="{{ url_for('admin_announcements') }}#create" class="btn btn-outline-primary">
+                        <i class="fas fa-bullhorn me-2"></i> Create Announcement
+                    </a>
+                    <a href="{{ url_for('admin_user_report') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-file-download me-2"></i> Download User Report
+                    </a>
+                    <a href="{{ url_for('chat') }}" class="btn btn-outline-primary">
                         <i class="fas fa-comments me-2"></i> Team Chat
                     </a>
                     <a href="#" class="btn btn-outline-primary">
-                        <i class="fas fa-calendar me-2"></i> Schedule Meeting
-                    </a>
-                    <a href="#" class="btn btn-outline-primary">
-                        <i class="fas fa-file-alt me-2"></i> Submit Report
-                    </a>
-                    <a href="#" class="btn btn-outline-primary">
-                        <i class="fas fa-question-circle me-2"></i> Get Help
+                        <i class="fas fa-calendar-plus me-2"></i> Schedule Meeting
                     </a>
                 </div>
             </div>
-        </div>
-
-        <div class="text-center mt-4">
-            <a href="{{ url_for('chat') }}" class="btn btn-success btn-lg px-4">
-                <i class="fas fa-comments me-2"></i> Go to Team Chat
-            </a>
         </div>
     </div>
 </div>

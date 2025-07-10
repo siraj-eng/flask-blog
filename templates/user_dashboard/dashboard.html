@@ -520,6 +520,14 @@
             <div class="nav-section">
                 <div class="nav-section-title">Navigation</div>
                 <ul>
+                    {% if session['role'] == 'admin' %}
+                    <li class="nav-item">
+                        <a href="{{ url_for('admin_dashboard') }}" class="nav-link">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Admin Dashboard</span>
+                        </a>
+                    </li>
+                    {% endif %}
                     <li class="nav-item">
                         <a href="{{ url_for('dashboard') }}" class="nav-link{% if active_page == 'dashboard' %} active{% endif %}">
                             <i class="fas fa-tachometer-alt"></i>

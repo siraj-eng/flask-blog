@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Activity Log - System Reports{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-4">System Activity Log</h2>
+  <div class="card">
+    <div class="card-body">
+      {% if logs %}
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Event</th>
+              <th>User</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in logs %}
+            <tr>
+              <td>{{ log.event }}</td>
+              <td>{{ log.user }}</td>
+              <td>{{ log.timestamp }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-muted">No activity logs found.</p>
+      {% endif %}
+    </div>
+  </div>
+  <a href="{{ url_for('admin_management') }}" class="btn btn-secondary mt-3">Back to System Reports</a>
+</div>
+{% endblock %} 

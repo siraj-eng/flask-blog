@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Support & Help - Admin{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="text-center">
+    <h1 class="mb-4"><i class="fas fa-question-circle text-green"></i> Support & Help</h1>
+    <p class="lead">Need help? This section will soon provide documentation, FAQs, and contact options for admin support.</p>
+    <div class="mt-4">
+      <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary">Back to Dashboard</a>
+    </div>
+  </div>
+</div>
+{% endblock %} 

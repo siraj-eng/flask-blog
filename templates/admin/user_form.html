@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Add User' if action == 'add' else 'Edit User' }} - Admin{% endblock %}
+
+{% block content %}
+<style>
+  /* Reusing the same CSS variables from the previous template */
+  .form-container {
+    max-width: 800px;
+    margin: 2rem auto;
+  }
+
+  .form-card {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+
+  .form-card-header {
+    background-color: var(--primary);
+    color: white;
+    padding: 1.5rem;
+  }
+
+  .form-card-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .form-card-body {
+    padding: 2rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+  }
+
+  .form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .btn-primary {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+  }
+
+  .btn-primary:hover {
+    background-color: var(--primary-dark);
+  }
+
+  .btn-secondary {
+    background-color: var(--text-muted);
+    color: white;
+    border: none;
+  }
+
+  .btn-secondary:hover {
+    background-color: var(--text-secondary);
+  }
+</style>
+
+<div class="form-container">
+  <div class="form-card">
+    <div class="form-card-header">
+      <h2 class="form-card-title">{{ 'Add User' if action == 'add' else 'Edit User' }}</h2>
+    </div>
+    <div class="form-card-body">
+      <form method="POST">
+        <div class="form-group">
+          <label for="username" class="form-label">Username</label>
+          <input type="text" class="form-control" id="username" name="username" required 
+                 {% if action == 'edit' %}value="{{ user.username }}" readonly{% endif %}>
+        </div>
+        
+        <div class="form-group">
+          <label for="email" class="form-label">Email</label>
+          <input type="email" class="form-control" id="email" name="email" required 
+                 value="{{ user.email if action == 'edit' else '' }}">
+        </div>
+        
+        {% if action == 'add' %}
+        <div class="form-group">
+          <label for="password" class="form-label">Password</label>
+          <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+        {% endif %}
+        
+        <div class="form-group">
+          <label for="full_name" class="form-label">Full Name</label>
+          <input type="text" class="form-control" id="full_name" name="full_name" 
+                 value="{{ user.full_name if action == 'edit' else '' }}">
+        </div>
+        
+        <div class="form-group">
+          <label for="department" class="form-label">Department</label>
+          <input type="text" class="form-control" id="department" name="department" 
+                 value="{{ user.department if action == 'edit' else '' }}">
+        </div>
+        
+        <div class="form-group">
+          <label for="position" class="form-label">Position</label>
+          <input type="text" class="form-control" id="position" name="position" 
+                 value="{{ user.position if action == 'edit' else '' }}">
+        </div>
+        
+        <div class="form-group">
+          <label for="role" class="form-label">Role</label>
+          <select class="form-control" id="role" name="role">
+            <option value="user" {% if action == 'edit' and user.role == 'user' %}selected{% endif %}>User</option>
+            <option value="hr" {% if action == 'edit' and user.role == 'hr' %}selected{% endif %}>HR</option>
+            <option value="admin" {% if action == 'edit' and user.role == 'admin' %}selected{% endif %}>Admin</option>
+          </select>
+        </div>
+        
+        <div class="form-actions">
+          <a href="{{ url_for('admin_users') }}" class="btn btn-secondary">Cancel</a>
+          <button type="submit" class="btn btn-primary">Add User</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

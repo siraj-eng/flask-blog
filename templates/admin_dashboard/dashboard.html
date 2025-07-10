@@ -1,0 +1,794 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard - Modern HR System{% endblock %}
+{% block content %}
+<style>
+  :root {
+    --primary: #4f46e5;
+    --primary-light: #6366f1;
+    --primary-dark: #4338ca;
+    --secondary: #f59e0b;
+    --secondary-light: #fbbf24;
+    --secondary-dark: #d97706;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --info: #3b82f6;
+    --text-primary: #1f2937;
+    --text-secondary: #4b5563;
+    --text-muted: #6b7280;
+    --bg-primary: #f9fafb;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f3f4f6;
+    --border-color: #e5e7eb;
+    --border-light: #f3f4f6;
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Import Montserrat font */
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap');
+
+  /* Dashboard Layout */
+  .dashboard-container {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--bg-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  /* Sidebar Styles */
+  .sidebar {
+    width: 280px;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
+    padding: 0;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: var(--shadow-md);
+  }
+
+  .sidebar-header {
+    padding: 24px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 32px;
+    font-weight: 900;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: 'Montserrat', sans-serif;
+    text-decoration: none;
+  }
+
+  .logo-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--primary);
+    color: white;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-family: 'Montserrat', sans-serif;
+  }
+
+  /* Rest of your existing CSS remains exactly the same */
+  .sidebar-nav {
+    padding: 16px 0;
+  }
+
+  .nav-section {
+    margin-bottom: 24px;
+  }
+
+  .nav-section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    padding: 0 24px;
+  }
+
+  .nav-item {
+    margin-bottom: 4px;
+    position: relative;
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 24px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    font-weight: 500;
+    border-left: 3px solid transparent;
+  }
+
+  .nav-link:hover {
+    background: var(--bg-tertiary);
+    color: var(--primary);
+    border-left-color: var(--primary);
+  }
+
+  .nav-link.active {
+    background: rgba(79, 70, 229, 0.05);
+    color: var(--primary);
+    border-left-color: var(--primary);
+    font-weight: 600;
+  }
+
+  .nav-link i {
+    width: 20px;
+    text-align: center;
+    font-size: 16px;
+    color: inherit;
+  }
+
+  .nav-link.logout {
+    color: var(--danger);
+  }
+
+  .nav-link.logout:hover {
+    background: rgba(239, 68, 68, 0.05);
+    border-left-color: var(--danger);
+  }
+
+  /* Main Content Styles */
+  .main-content {
+    flex: 1;
+    margin-left: 280px;
+    padding: 32px;
+    background-color: var(--bg-primary);
+    min-height: 100vh;
+  }
+
+  /* Header Styles */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    padding: 24px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .header-title h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .header-title p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-top: 8px;
+    margin-bottom: 0;
+  }
+
+  .user-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+  }
+
+  .user-info h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .user-info p {
+    margin: 0;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  /* Stats Grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+
+  .stat-title {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: white;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  }
+
+  .stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 8px 0 4px;
+  }
+
+  .stat-change {
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .stat-change.positive {
+    color: var(--success);
+  }
+
+  .stat-change.negative {
+    color: var(--danger);
+  }
+
+  /* Content Sections */
+  .content-section {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 32px;
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-title i {
+    color: var(--primary);
+  }
+
+  /* Announcements */
+  .announcement-item {
+    padding: 16px;
+    margin-bottom: 16px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    border-left: 4px solid var(--primary);
+    transition: all 0.2s ease;
+  }
+
+  .announcement-item:hover {
+    transform: translateX(4px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .announcement-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+  }
+
+  .announcement-meta {
+    display: flex;
+    justify-content: space-between;
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-bottom: 12px;
+  }
+
+  .announcement-content {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+
+  /* Form Styles */
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 14px;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 14px;
+    transition: all 0.2s ease;
+  }
+
+  .form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--primary);
+    color: white;
+  }
+
+  .btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .btn i {
+    font-size: 16px;
+  }
+
+  .btn-sm {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+
+  /* Alerts */
+  .alert {
+    padding: 16px;
+    border-radius: var(--radius-md);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .alert-success {
+    background: rgba(16, 185, 129, 0.1);
+    border-left: 4px solid var(--success);
+    color: var(--text-primary);
+  }
+
+  .alert-warning {
+    background: rgba(245, 158, 11, 0.1);
+    border-left: 4px solid var(--warning);
+    color: var(--text-primary);
+  }
+
+  .alert-info {
+    background: rgba(59, 130, 246, 0.1);
+    border-left: 4px solid var(--info);
+    color: var(--text-primary);
+  }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .sidebar {
+      width: 240px;
+    }
+    
+    .main-content {
+      margin-left: 240px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .sidebar {
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+    }
+    
+    .sidebar.active {
+      transform: translateX(0);
+    }
+    
+    .main-content {
+      margin-left: 0;
+      padding: 24px;
+    }
+    
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+    }
+  }
+</style>
+
+<div class="dashboard-container">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="#" class="logo" style="justify-content: center; width: 100%;">
+        <span>TEAMSYNC ADMIN</span>
+      </a>
+    </div>
+    
+    <!-- Rest of your template remains exactly the same -->
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Admin Navigation</div>
+        <ul>
+          <li class="nav-item">
+            <a href="{{ url_for('admin_dashboard') }}" class="nav-link active">
+              <i class="fas fa-tachometer-alt"></i>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('admin_users') }}" class="nav-link">
+              <i class="fas fa-users"></i>
+              <span>User Management</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('admin_hr_staff') }}" class="nav-link">
+              <i class="fas fa-user-tie"></i>
+              <span>HR Staff</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('admin_announcements') }}" class="nav-link">
+              <i class="fas fa-bullhorn"></i>
+              <span>Announcements</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+      
+      <div class="nav-section">
+        <div class="nav-section-title">System</div>
+        <ul>
+          <li class="nav-item">
+            <a href="{{ url_for('admin_settings') }}" class="nav-link">
+              <i class="fas fa-cog"></i>
+              <span>Settings</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('admin_management') }}" class="nav-link">
+              <i class="fas fa-chart-pie"></i>
+              <span>Reports</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('admin_activity_log') }}" class="nav-link">
+              <i class="fas fa-clipboard-list"></i>
+              <span>Activity Log</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+      
+      <div class="nav-section">
+        <div class="nav-section-title">Account</div>
+        <ul>
+          <li class="nav-item">
+            <a href="{{ url_for('admin_notifications') }}" class="nav-link">
+              <i class="fas fa-bell"></i>
+              <span>Notifications</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('logout') }}" class="nav-link logout">
+              <i class="fas fa-sign-out-alt"></i>
+              <span>Logout</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Welcome Alert -->
+    <div class="alert alert-success">
+      <i class="fas fa-check-circle"></i>
+      <div>
+        <strong>Welcome to Admin Dashboard</strong> - You have {{ unread_notifications or 0 }} new notifications
+      </div>
+    </div>
+    
+    <!-- Header -->
+    <div class="header">
+      <div class="header-title">
+        <h1>Admin Dashboard</h1>
+        <p>Overview of system statistics and activities</p>
+      </div>
+      
+      <div class="user-profile">
+        <div class="user-avatar">{{ session.get('username')[0].upper() }}</div>
+        <div class="user-info">
+          <h4>{{ session.get('username') }}</h4>
+          <p>Admin User</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="stat-title">Total Users</div>
+          <div class="stat-icon">
+            <i class="fas fa-users"></i>
+          </div>
+        </div>
+        <div class="stat-value">{{ user_count }}</div>
+        <div class="stat-change positive">
+          <i class="fas fa-arrow-up"></i>
+          <span>From last month</span>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="stat-title">HR Staff</div>
+          <div class="stat-icon">
+            <i class="fas fa-user-tie"></i>
+          </div>
+        </div>
+        <div class="stat-value">HR</div>
+        <div class="stat-change positive">
+          <i class="fas fa-arrow-up"></i>
+          <span>From last month</span>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="stat-title">Announcements</div>
+          <div class="stat-icon">
+            <i class="fas fa-bullhorn"></i>
+          </div>
+        </div>
+        <div class="stat-value">{{ announcements|length }}</div>
+        <div class="stat-change positive">
+          <i class="fas fa-arrow-up"></i>
+          <span>Active this week</span>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="stat-title">Lunch Orders</div>
+          <div class="stat-icon">
+            <i class="fas fa-utensils"></i>
+          </div>
+        </div>
+        <div class="stat-value">-</div>
+        <div class="stat-change negative">
+          <i class="fas fa-arrow-down"></i>
+          <span>Today's count</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Two Column Layout -->
+    <div class="row">
+      <!-- Left Column -->
+      <div class="col-md-6">
+        <!-- Lunch Order Form -->
+        <div class="content-section">
+          <div class="section-header">
+            <h2 class="section-title"><i class="fas fa-utensils"></i> Place Lunch Order</h2>
+          </div>
+          <form method="POST" action="{{ url_for('submit_lunch_order') }}" enctype="multipart/form-data">
+            <div class="form-group">
+              <label for="main_menu" class="form-label">Main Menu</label>
+              <input type="text" class="form-control" id="main_menu" name="main_menu" placeholder="Enter main menu item..." required>
+            </div>
+            <div class="form-group">
+              <label for="accompaniment" class="form-label">Accompaniment</label>
+              <input type="text" class="form-control" id="accompaniment" name="accompaniment" placeholder="Enter accompaniment...">
+            </div>
+            <div class="form-group">
+              <label for="notes" class="form-label">Special Instructions</label>
+              <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Any dietary restrictions or special requests?"></textarea>
+            </div>
+            <button type="submit" class="btn">
+              <i class="fas fa-paper-plane"></i>
+              Submit Order
+            </button>
+          </form>
+        </div>
+        
+        <!-- Recent Lunch Orders -->
+        <div class="content-section">
+          <div class="section-header">
+            <h2 class="section-title"><i class="fas fa-history"></i> Recent Orders</h2>
+          </div>
+          {% if lunch_orders %}
+          <ul style="padding-left: 0;">
+            {% for order in lunch_orders %}
+            <li class="announcement-item" style="list-style: none; margin-bottom: 12px;">
+              <div class="announcement-title">{{ order.dish }}</div>
+              <div class="announcement-meta">
+                <span>{{ order.created_at[:10] }}</span>
+                <span class="badge bg-{{ 'success' if order.status == 'completed' else 'warning' }}">{{ order.status|capitalize }}</span>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="text-muted">No recent orders.</p>
+          {% endif %}
+        </div>
+      </div>
+      
+      <!-- Right Column -->
+      <div class="col-md-6">
+        <!-- Announcements -->
+        <div class="content-section">
+          <div class="section-header">
+            <h2 class="section-title"><i class="fas fa-bullhorn"></i> Announcements</h2>
+            <a href="{{ url_for('admin_announcements') }}" class="btn btn-sm">
+              <i class="fas fa-plus"></i>
+              Create
+            </a>
+          </div>
+          {% if announcements %}
+            {% for announcement in announcements %}
+            <div class="announcement-item">
+              <div class="announcement-title">{{ announcement.title }}</div>
+              <div class="announcement-meta">
+                <span><i class="fas fa-user"></i> {{ announcement.author_name }}</span>
+                <span><i class="fas fa-calendar"></i> {{ announcement.created_at[:10] }}</span>
+              </div>
+              <div class="announcement-content">{{ announcement.content[:150] }}...</div>
+              
+              <!-- Comments Section -->
+              <div style="margin-top: 12px;">
+                <form method="POST" action="{{ url_for('add_comment', announcement_id=announcement.id) }}">
+                  <div class="input-group" style="display: flex;">
+                    <input type="text" class="form-control" name="content" placeholder="Add a comment..." required style="flex: 1;">
+                    <button class="btn btn-sm" type="submit" style="border-radius: 0 var(--radius-md) var(--radius-md) 0;">
+                      <i class="fas fa-paper-plane"></i>
+                    </button>
+                  </div>
+                </form>
+                {% if announcement.comments %}
+                <ul style="padding-left: 0; margin-top: 12px;">
+                  {% for comment in announcement.comments %}
+                  <li style="list-style: none; margin-bottom: 8px; font-size: 13px;">
+                    <strong>{{ comment.author_name }}:</strong> {{ comment.content }}
+                  </li>
+                  {% endfor %}
+                </ul>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+          <div class="text-center" style="padding: 2rem; color: var(--text-muted);">
+            <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+            <p>No announcements yet</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  // Animate counting numbers
+  function animateValue(element, start, end, duration) {
+    let startTimestamp = null;
+    const step = (timestamp) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      const current = Math.floor(progress * (end - start) + start);
+      element.innerHTML = current;
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      }
+    };
+    window.requestAnimationFrame(step);
+  }
+
+  // Initialize count animations
+  document.addEventListener('DOMContentLoaded', function() {
+    const userCount = document.querySelector('.stat-value:first-child');
+    setTimeout(() => {
+      animateValue(userCount, 0, {{ user_count }}, 1500);
+    }, 500);
+  });
+
+  // Add form submission animation
+  document.querySelector('form').addEventListener('submit', function(e) {
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+    submitBtn.disabled = true;
+  });
+</script>
+{% endblock %}

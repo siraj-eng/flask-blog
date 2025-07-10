@@ -21,6 +21,7 @@ import io
 import time
 from werkzeug.utils import secure_filename
 from reportlab.platypus import Flowable
+# from flask_wtf import CSRFProtect
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 app.config['SECRET_KEY'] = 'b6cf94b299a1f56d63199b2298f7095c3ee344bd1bb1a77cfd6e03d4a2b95b71'
@@ -28,6 +29,7 @@ app.config['DATABASE'] = 'hr_system.db'
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 
 socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
+# csrf = CSRFProtect(app)
 
 # Database Helper Functions
 def get_db():
@@ -371,7 +373,7 @@ def login():
             
             # Redirect to appropriate dashboard based on role
             if user['role'] == 'admin':
-                return redirect(url_for('admin_dashboard'))
+                return redirect(url_for('dashboard'))
             elif user['role'] == 'hr':
                 return redirect(url_for('hr_dashboard'))
             else:
@@ -433,7 +435,7 @@ def dashboard():
         ).fetchall()
         today_menu = db.execute('SELECT * FROM lunch_menus WHERE date = ?', (today,)).fetchone()
     print('Total dashboard route time:', time.time() - total_start, 'seconds')
-    return render_template('user/dashboard.html', announcements=announcements, complaints_count=complaints_count, repairs_count=repairs_count, unread_notifications=unread_notifications, lunch_orders=lunch_orders, today_str=today, today_menu=today_menu)
+    return render_template('user_dashboard/dashboard.html', announcements=announcements, complaints_count=complaints_count, repairs_count=repairs_count, unread_notifications=unread_notifications, lunch_orders=lunch_orders, today_str=today, today_menu=today_menu)
 
 # Admin Section
 @app.route('/admin/dashboard')
@@ -452,7 +454,7 @@ def admin_dashboard():
             WHERE DATE(lo.created_at) = ?
             ORDER BY lo.created_at ASC
         ''', (today,)).fetchall()
-    return render_template('admin/dashboard.html', 
+    return render_template('admin_dashboard/dashboard.html', 
                          user_count=user_count,
                          recent_users=recent_users,
                          announcements=announcements,
@@ -461,9 +463,37 @@ def admin_dashboard():
 @app.route('/admin/users')
 @admin_required
 def admin_users():
+    q = request.args.get('q', '').strip()
+    page = int(request.args.get('page', 1))
+    per_page = 10
+    offset = (page - 1) * per_page
+    sort = request.args.get('sort', 'created_at')
+    order = request.args.get('order', 'desc')
+    allowed_sorts = ['username', 'email', 'full_name', 'department', 'position', 'role', 'created_at']
+    allowed_orders = ['asc', 'desc']
+    if sort not in allowed_sorts:
+        sort = 'created_at'
+    if order not in allowed_orders:
+        order = 'desc'
+    sort_sql = f"{sort} {order.upper()}"
     with get_db() as db:
-        users = db.execute('SELECT * FROM users ORDER BY created_at DESC').fetchall()
-    return render_template('admin/users.html', users=users)
+        if q:
+            users = db.execute(f'''
+                SELECT * FROM users WHERE 
+                    username LIKE ? OR email LIKE ? OR full_name LIKE ? OR department LIKE ? OR position LIKE ?
+                ORDER BY {sort_sql} LIMIT ? OFFSET ?''',
+                (f'%{q}%', f'%{q}%', f'%{q}%', f'%{q}%', f'%{q}%', per_page, offset)
+            ).fetchall()
+            total = db.execute('''
+                SELECT COUNT(*) FROM users WHERE 
+                    username LIKE ? OR email LIKE ? OR full_name LIKE ? OR department LIKE ? OR position LIKE ?''',
+                (f'%{q}%', f'%{q}%', f'%{q}%', f'%{q}%', f'%{q}%')
+            ).fetchone()[0]
+        else:
+            users = db.execute(f'SELECT * FROM users ORDER BY {sort_sql} LIMIT ? OFFSET ?', (per_page, offset)).fetchall()
+            total = db.execute('SELECT COUNT(*) FROM users').fetchone()[0]
+    total_pages = (total + per_page - 1) // per_page
+    return render_template('admin/users.html', users=users, q=q, page=page, total_pages=total_pages, sort=sort, order=order)
 
 @app.route('/admin/create_announcement', methods=['POST'])
 @admin_required
@@ -1291,6 +1321,282 @@ def chat_upload_file():
         file_url = url_for('static', filename=f'uploads/{filename}')
         return jsonify({'file_url': file_url}), 200
     return jsonify({'error': 'Invalid file type'}), 400
+
+@app.route('/admin/users/add', methods=['GET', 'POST'])
+@admin_required
+def admin_add_user():
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        email = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '')
+        role = request.form.get('role', 'user')
+        full_name = request.form.get('full_name', '').strip()
+        department = request.form.get('department', '').strip()
+        position = request.form.get('position', '').strip()
+        if not username or not email or not password:
+            flash('Username, email, and password are required.', 'danger')
+            return redirect(url_for('admin_add_user'))
+        with get_db() as db:
+            existing = db.execute('SELECT id FROM users WHERE username = ? OR email = ?', (username, email)).fetchone()
+            if existing:
+                flash('Username or email already exists.', 'danger')
+                return redirect(url_for('admin_add_user'))
+            db.execute('INSERT INTO users (username, email, password_hash, role, full_name, department, position) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                       (username, email, generate_password_hash(password), role, full_name, department, position))
+            db.commit()
+        flash('User created successfully.', 'success')
+        return redirect(url_for('admin_users'))
+    return render_template('admin/user_form.html', action='add')
+
+@app.route('/admin/users/edit/<int:user_id>', methods=['GET', 'POST'])
+@admin_required
+def admin_edit_user(user_id):
+    with get_db() as db:
+        user = db.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
+        if not user:
+            flash('User not found.', 'danger')
+            return redirect(url_for('admin_users'))
+        if request.method == 'POST':
+            full_name = request.form.get('full_name', '').strip()
+            email = request.form.get('email', '').strip().lower()
+            department = request.form.get('department', '').strip()
+            position = request.form.get('position', '').strip()
+            role = request.form.get('role', user['role'])
+            db.execute('UPDATE users SET full_name = ?, email = ?, department = ?, position = ?, role = ? WHERE id = ?',
+                       (full_name, email, department, position, role, user_id))
+            db.commit()
+            flash('User updated successfully.', 'success')
+            return redirect(url_for('admin_users'))
+    return render_template('admin/user_form.html', action='edit', user=user)
+
+@app.route('/admin/users/delete/<int:user_id>', methods=['POST'])
+@admin_required
+def admin_delete_user(user_id):
+    with get_db() as db:
+        db.execute('DELETE FROM users WHERE id = ?', (user_id,))
+        db.commit()
+    flash('User deleted.', 'success')
+    return redirect(url_for('admin_users'))
+
+@app.route('/admin/users/role/<int:user_id>', methods=['POST'])
+@admin_required
+def admin_change_user_role(user_id):
+    new_role = request.form.get('role')
+    if new_role not in ['user', 'hr', 'admin']:
+        flash('Invalid role.', 'danger')
+        return redirect(url_for('admin_users'))
+    with get_db() as db:
+        db.execute('UPDATE users SET role = ? WHERE id = ?', (new_role, user_id))
+        db.commit()
+    flash('User role updated.', 'success')
+    return redirect(url_for('admin_users'))
+
+@app.route('/admin/management')
+@admin_required
+def admin_management():
+    # Placeholder data for widgets
+    with get_db() as db:
+        notifications = db.execute('SELECT * FROM notifications ORDER BY created_at DESC LIMIT 5').fetchall()
+        lunch_orders = db.execute('SELECT * FROM lunch_orders ORDER BY created_at DESC LIMIT 2').fetchall()
+        announcements = db.execute('SELECT * FROM announcements ORDER BY created_at DESC LIMIT 3').fetchall()
+    return render_template('admin/management.html', notifications=notifications, lunch_orders=lunch_orders, announcements=announcements)
+
+@app.route('/admin/reports/users')
+@admin_required
+def admin_user_report():
+    with get_db() as db:
+        users = db.execute('SELECT username, full_name, email, role, department, position, created_at FROM users ORDER BY created_at DESC').fetchall()
+    si = StringIO()
+    writer = csv.writer(si)
+    writer.writerow(['Username', 'Full Name', 'Email', 'Role', 'Department', 'Position', 'Created At'])
+    for user in users:
+        writer.writerow([user['username'], user['full_name'], user['email'], user['role'], user['department'], user['position'], user['created_at']])
+    output = si.getvalue()
+    return app.response_class(
+        output,
+        mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment;filename=users_report.csv'}
+    )
+
+@app.route('/admin/reports/users/pdf')
+@admin_required
+def admin_user_report_pdf():
+    with get_db() as db:
+        users = db.execute('SELECT username, full_name, email, role, department, position, created_at FROM users ORDER BY created_at DESC').fetchall()
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(letter))
+    data = [['Username', 'Full Name', 'Email', 'Role', 'Department', 'Position', 'Created At']]
+    for user in users:
+        data.append([
+            user['username'],
+            user['full_name'] or '-',
+            user['email'],
+            user['role'],
+            user['department'] or '-',
+            user['position'] or '-',
+            user['created_at'][:10]
+        ])
+    table = Table(data, repeatRows=1)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f8f9fa')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#1e7e34')),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+    ]))
+    elements = [table]
+    doc.build(elements)
+    buffer.seek(0)
+    return app.response_class(buffer, mimetype='application/pdf', headers={'Content-Disposition': 'attachment; filename=users_report.pdf'})
+
+@app.route('/admin/reports/lunch_orders')
+@admin_required
+def admin_lunch_orders_report():
+    with get_db() as db:
+        orders = db.execute('SELECT lo.id, u.username, u.full_name, lo.dish, lo.notes, lo.status, lo.created_at FROM lunch_orders lo JOIN users u ON lo.user_id = u.id ORDER BY lo.created_at DESC').fetchall()
+    si = StringIO()
+    writer = csv.writer(si)
+    writer.writerow(['Order ID', 'Username', 'Full Name', 'Dish', 'Notes', 'Status', 'Created At'])
+    for order in orders:
+        writer.writerow([order['id'], order['username'], order['full_name'], order['dish'], order['notes'], order['status'], order['created_at']])
+    output = si.getvalue()
+    return app.response_class(
+        output,
+        mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment;filename=lunch_orders_report.csv'}
+    )
+
+@app.route('/admin/reports/activity')
+@admin_required
+def admin_activity_log():
+    # Placeholder: In a real app, fetch from an activity log table
+    logs = [
+        {'event': 'User login', 'user': 'admin', 'timestamp': '2024-06-01 09:00'},
+        {'event': 'Added new user', 'user': 'admin', 'timestamp': '2024-06-01 09:05'},
+        {'event': 'Deleted complaint', 'user': 'admin', 'timestamp': '2024-06-01 09:10'},
+    ]
+    return render_template('admin/activity_log.html', logs=logs)
+
+@app.route('/admin/settings', methods=['GET', 'POST'])
+@admin_required
+def admin_settings():
+    # Placeholder: Add system settings logic here
+    return render_template('admin/settings.html')
+
+@app.route('/admin/notifications')
+@admin_required
+def admin_notifications():
+    with get_db() as db:
+        notifications = db.execute('SELECT * FROM notifications ORDER BY created_at DESC').fetchall()
+    return render_template('admin/notifications.html', notifications=notifications)
+
+@app.route('/admin/hr_staff')
+@admin_required
+def admin_hr_staff():
+    with get_db() as db:
+        hr_users = db.execute('SELECT * FROM users WHERE role = "hr" ORDER BY created_at DESC').fetchall()
+        all_users = db.execute('SELECT * FROM users ORDER BY created_at DESC').fetchall()
+    return render_template('admin/hr_staff.html', hr_users=hr_users, all_users=all_users)
+
+# --- Admin Announcements ---
+@app.route('/admin/announcements', methods=['GET', 'POST'])
+@admin_required
+def admin_announcements():
+    with get_db() as db:
+        if request.method == 'POST':
+            title = request.form.get('title', '').strip()
+            content = request.form.get('content', '').strip()
+            image = request.files.get('image')
+            image_filename = None
+            if image and image.filename:
+                image_filename = f"announcement_{datetime.now().strftime('%Y%m%d%H%M%S')}_{image.filename}"
+                image.save(os.path.join('static', 'img', image_filename))
+            if image_filename:
+                content += f'\n<img src="/static/img/{image_filename}" class="img-fluid rounded mt-3" alt="Announcement Image">'
+            db.execute(
+                'INSERT INTO announcements (title, content, author_id) VALUES (?, ?, ?)',
+                (title, content, session['user_id'])
+            )
+            db.commit()
+            flash('Announcement posted successfully!', 'success')
+            return redirect(url_for('admin_announcements'))
+
+        # --- Search, Filter, Sort ---
+        q = request.args.get('q', '').strip()
+        author = request.args.get('author', '').strip()
+        sort = request.args.get('sort', 'created_at')
+        order = request.args.get('order', 'desc')
+        valid_sort = {'created_at', 'title', 'author_name'}
+        if sort not in valid_sort:
+            sort = 'created_at'
+        if order not in {'asc', 'desc'}:
+            order = 'desc'
+
+        # Build query
+        base_query = '''SELECT a.*, u.full_name as author_name FROM announcements a JOIN users u ON a.author_id = u.id'''
+        where_clauses = []
+        params = []
+        if q:
+            where_clauses.append('(a.title LIKE ? OR a.content LIKE ?)')
+            params.extend([f'%{q}%', f'%{q}%'])
+        if author:
+            where_clauses.append('a.author_id = ?')
+            params.append(author)
+        where_sql = (' WHERE ' + ' AND '.join(where_clauses)) if where_clauses else ''
+        order_sql = f' ORDER BY {sort} {order.upper()}'
+        query = base_query + where_sql + order_sql
+        announcements = db.execute(query, params).fetchall()
+
+        # For author filter dropdown
+        authors = db.execute('SELECT DISTINCT u.id, u.full_name FROM announcements a JOIN users u ON a.author_id = u.id ORDER BY u.full_name').fetchall()
+
+    return render_template('admin/announcements.html', announcements=announcements, q=q, author=author, sort=sort, order=order, authors=authors)
+
+@app.route('/admin/announcements/edit/<int:announcement_id>', methods=['GET', 'POST'])
+@admin_required
+def admin_edit_announcement(announcement_id):
+    with get_db() as db:
+        announcement = db.execute('SELECT * FROM announcements WHERE id = ?', (announcement_id,)).fetchone()
+        if not announcement:
+            flash('Announcement not found.', 'danger')
+            return redirect(url_for('admin_announcements'))
+        if request.method == 'POST':
+            title = request.form.get('title', '').strip()
+            content = request.form.get('content', '').strip()
+            image = request.files.get('image')
+            image_filename = None
+            if image and image.filename:
+                image_filename = f"announcement_{datetime.now().strftime('%Y%m%d%H%M%S')}_{image.filename}"
+                image.save(os.path.join('static', 'img', image_filename))
+            if image_filename:
+                content += f'\n<img src="/static/img/{image_filename}" class="img-fluid rounded mt-3" alt="Announcement Image">'
+            db.execute('UPDATE announcements SET title=?, content=? WHERE id=?', (title, content, announcement_id))
+            db.commit()
+            flash('Announcement updated.', 'success')
+            return redirect(url_for('admin_announcements'))
+    return render_template('admin/announcement_form.html', action='edit', announcement=announcement)
+
+@app.route('/admin/announcements/delete/<int:announcement_id>', methods=['POST'])
+@admin_required
+def admin_delete_announcement(announcement_id):
+    with get_db() as db:
+        db.execute('DELETE FROM announcements WHERE id = ?', (announcement_id,))
+        db.commit()
+    flash('Announcement deleted.', 'success')
+    return redirect(url_for('admin_announcements'))
+
+@app.route('/admin/events')
+@admin_required
+def admin_events():
+    return render_template('admin/events.html')
+
+@app.route('/admin/support')
+@admin_required
+def admin_support():
+    return render_template('admin/support.html')
 
 if __name__ == '__main__':
     # Create required directories if they don't exist

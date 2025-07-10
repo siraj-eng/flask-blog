@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}Edit Announcement - Admin{% endblock %}
+{% block content %}
+<div class="dashboard-container" style="display: flex; min-height: 100vh;">
+  <!-- Sidebar -->
+  <aside class="sidebar bg-white shadow-sm rounded p-3" style="width: 240px; min-height: 100vh;">
+    <h5 class="mb-4 text-primary">Admin Menu</h5>
+    <ul class="nav flex-column" style="padding-left: 0;">
+      <style>
+        .admin-bullet-nav .nav-item {
+          position: relative;
+          padding-left: 24px;
+          margin-bottom: 8px;
+        }
+        .admin-bullet-nav .nav-item:before {
+          content: "\2022";
+          position: absolute;
+          left: 8px;
+          color: #2196F3;
+          font-size: 1.2em;
+        }
+        .admin-bullet-nav .nav-link {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          color: #424242;
+          text-decoration: none;
+          font-weight: 500;
+          border-radius: 6px;
+          padding: 8px 12px;
+          transition: all 0.2s ease;
+        }
+        .admin-bullet-nav .nav-link.active, 
+        .admin-bullet-nav .nav-link:hover {
+          background: #E3F2FD;
+          color: #1565C0;
+        }
+        .admin-bullet-nav .nav-link i {
+          width: 20px;
+          text-align: center;
+        }
+      </style>
+      <div class="admin-bullet-nav">
+        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_dashboard') }}"><i class="fas fa-home"></i>Admin Dashboard</a></li>
+        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_users') }}"><i class="fas fa-users"></i>User Management</a></li>
+        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_hr_staff') }}"><i class="fas fa-user-tie"></i>HR Staff</a></li>
+        <li class="nav-item mb-2"><a class="nav-link active" href="{{ url_for('admin_announcements') }}"><i class="fas fa-bullhorn"></i>Announcements</a></li>
+        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_settings') }}"><i class="fas fa-cog"></i>System Settings</a></li>
+        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_management') }}"><i class="fas fa-chart-pie"></i>Reports</a></li>
+        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_notifications') }}"><i class="fas fa-bell"></i>Notifications</a></li>
+        <li class="nav-item mt-4"><a class="nav-link text-danger" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i>Logout</a></li>
+      </div>
+    </ul>
+  </aside>
+  
+  <!-- Main Content -->
+  <div class="main-content" style="flex: 1; padding: 2rem; background-color: #f5f9fc;">
+    <div class="container py-4">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 text-primary">Edit Announcement</h2>
+        <a href="{{ url_for('admin_announcements') }}" class="btn btn-outline-primary">
+          <i class="fas fa-arrow-left me-2"></i>Back to Announcements
+        </a>
+      </div>
+      
+      <div class="row justify-content-center">
+        <div class="col-lg-8">
+          <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+              <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Edit Announcement</h5>
+            </div>
+            <div class="card-body">
+              <form method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                  <label for="title" class="form-label">Title</label>
+                  <input type="text" class="form-control" id="title" name="title" required 
+                         maxlength="100" value="{{ announcement.title }}">
+                </div>
+                <div class="mb-3">
+                  <label for="content" class="form-label">Content</label>
+                  <textarea class="form-control" id="content" name="content" rows="6" required>{{ announcement.content }}</textarea>
+                </div>
+                <div class="mb-4">
+                  <label for="image" class="form-label">Add Additional Image (optional)</label>
+                  <input class="form-control" type="file" id="image" name="image" accept="image/*">
+                  {% if announcement.image_url %}
+                  <div class="mt-2">
+                    <small class="text-muted">Current image: {{ announcement.image_url.split('/')[-1] }}</small>
+                  </div>
+                  {% endif %}
+                </div>
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i>Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

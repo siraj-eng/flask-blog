@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+{% block title %}Announcements Management - HR System{% endblock %}
+{% block content %}
+<div class="container-fluid py-4 px-4">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 fw-bold text-primary mb-2">
+        <i class="fas fa-bullhorn me-2"></i>Announcements Dashboard
+      </h1>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{{ url_for('admin_dashboard') }}">Home</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Announcements</li>
+        </ol>
+      </nav>
+    </div>
+    <div>
+      <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-primary">
+        <i class="fas fa-arrow-left me-2"></i>Dashboard
+      </a>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-muted mb-2">Total Announcements</h6>
+              <h3 class="mb-0">{{ announcements|length }}</h3>
+            </div>
+            <div class="bg-primary bg-opacity-10 p-3 rounded-circle">
+              <i class="fas fa-bullhorn text-primary fs-4"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-muted mb-2">Active Authors</h6>
+              <h3 class="mb-0">{{ authors|length }}</h3>
+            </div>
+            <div class="bg-success bg-opacity-10 p-3 rounded-circle">
+              <i class="fas fa-users text-success fs-4"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-muted mb-2">Today's Date</h6>
+              <h3 class="mb-0">{{ current_date }}</h3>
+            </div>
+            <div class="bg-info bg-opacity-10 p-3 rounded-circle">
+              <i class="fas fa-calendar-day text-info fs-4"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="row g-4">
+    <!-- Create Announcement -->
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Create New</h5>
+        </div>
+        <div class="card-body">
+          <form method="POST" enctype="multipart/form-data">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Title</label>
+              <input type="text" class="form-control" name="title" required maxlength="100" placeholder="Enter title...">
+              <small class="text-muted">Maximum 100 characters</small>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Content</label>
+              <textarea class="form-control" name="content" rows="5" required placeholder="Write content..."></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Attachment</label>
+              <input type="file" class="form-control" name="image" accept="image/*">
+              <small class="text-muted">Optional image (JPG, PNG, GIF)</small>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 mt-2">
+              <i class="fas fa-paper-plane me-2"></i>Publish Announcement
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Announcements List -->
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <h5 class="mb-0"><i class="fas fa-list me-2"></i>All Announcements</h5>
+          <span class="badge bg-primary rounded-pill">{{ announcements|length }}</span>
+        </div>
+        <div class="card-body p-0">
+          {% if announcements %}
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="bg-light">
+                <tr>
+                  <th class="ps-4">Title</th>
+                  <th>Author</th>
+                  <th>Date</th>
+                  <th class="text-end pe-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for a in announcements %}
+                <tr>
+                  <td class="ps-4">
+                    <div class="d-flex align-items-center">
+                      <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-3">
+                        <i class="fas fa-bullhorn text-primary"></i>
+                      </div>
+                      <div>
+                        <h6 class="mb-0 fw-semibold">{{ a.title|truncate(25) }}</h6>
+                        <small class="text-muted">{{ a.content|truncate(40) }}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="bg-success bg-opacity-10 p-2 rounded-circle me-2">
+                        <i class="fas fa-user text-success"></i>
+                      </div>
+                      <span>{{ a.author_name }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="bg-info bg-opacity-10 p-2 rounded-circle me-2">
+                        <i class="fas fa-calendar text-info"></i>
+                      </div>
+                      <div>
+                        <small class="d-block">{{ a.created_at[:10] }}</small>
+                        <small class="text-muted">{{ a.created_at[11:16] }}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="text-end pe-4">
+                    <div class="btn-group btn-group-sm" role="group">
+                      <a href="{{ url_for('admin_edit_announcement', announcement_id=a.id) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit"></i>
+                      </a>
+                      <form method="POST" action="{{ url_for('admin_delete_announcement', announcement_id=a.id) }}" style="display:inline;">
+                        <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Delete this announcement?')">
+                          <i class="fas fa-trash-alt"></i>
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center py-5">
+            <div class="mb-3">
+              <i class="fas fa-bullhorn fa-4x text-muted opacity-25"></i>
+            </div>
+            <h5 class="text-muted">No announcements found</h5>
+            <p class="text-muted mb-4">Create your first announcement using the form</p>
+            <button class="btn btn-primary" onclick="document.querySelector('#title').focus()">
+              <i class="fas fa-plus me-2"></i>Create Announcement
+            </button>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 10px;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
+}
+
+.table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.table tbody tr:hover {
+  background-color: rgba(0, 123, 255, 0.03) !important;
+}
+
+.breadcrumb {
+  background-color: transparent;
+  padding: 0;
+}
+
+.breadcrumb-item.active {
+  color: #6c757d;
+}
+
+.btn-group .btn {
+  border-radius: 6px !important;
+  margin-right: 4px;
+}
+
+.btn-group .btn:last-child {
+  margin-right: 0;
+}
+</style>
+{% endblock %}
