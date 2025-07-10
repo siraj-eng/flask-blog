@@ -1483,8 +1483,9 @@ def admin_activity_log():
 @app.route('/admin/settings', methods=['GET', 'POST'])
 @admin_required
 def admin_settings():
-    # Placeholder: Add system settings logic here
-    return render_template('admin/settings.html')
+    with get_db() as db:
+        admin = db.execute('SELECT * FROM users WHERE role = "admin" LIMIT 1').fetchone()
+    return render_template('admin/settings.html', admin=admin)
 
 @app.route('/admin/notifications')
 @admin_required

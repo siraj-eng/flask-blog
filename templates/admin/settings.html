@@ -2,61 +2,150 @@
 {% block title %}System Settings - Admin{% endblock %}
 {% block content %}
 <div class="dashboard-container" style="display: flex; min-height: 100vh;">
-  <!-- Sidebar -->
-  <aside class="sidebar bg-white shadow-sm rounded p-3" style="width: 240px; min-height: 100vh;">
-    <h5 class="mb-4 text-green">Admin Menu</h5>
-    <ul class="nav flex-column" style="padding-left: 0;">
-      <style>
-        .admin-bullet-nav .nav-item {
-          position: relative;
-          padding-left: 24px;
-          margin-bottom: 8px;
-        }
-        .admin-bullet-nav .nav-item:before {
-          content: "\2022";
-          position: absolute;
-          left: 8px;
-          color: #00c853;
-          font-size: 1.2em;
-        }
-        .admin-bullet-nav .nav-link {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          color: #212121;
-          text-decoration: none;
-          font-weight: 500;
-          border-radius: 6px;
-          padding: 8px 12px;
-          transition: background 0.2s, color 0.2s;
-        }
-        .admin-bullet-nav .nav-link.active, .admin-bullet-nav .nav-link:hover {
-          background: #e8f5e9;
-          color: #00c853;
-        }
-      </style>
-      <div class="admin-bullet-nav">
-        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_dashboard') }}"><i class="fas fa-home me-2"></i>Admin Dashboard</a></li>
-        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_users') }}"><i class="fas fa-users me-2"></i>User Management</a></li>
-        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_hr_staff') }}"><i class="fas fa-user-tie me-2"></i>HR Staff & Permissions</a></li>
-        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_announcements') }}"><i class="fas fa-bullhorn me-2"></i>Announcements</a></li>
-        <li class="nav-item mb-2"><a class="nav-link active" href="{{ url_for('admin_settings') }}"><i class="fas fa-cog me-2"></i>System Settings</a></li>
-        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_management') }}"><i class="fas fa-chart-pie me-2"></i>Reports</a></li>
-        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_notifications') }}"><i class="fas fa-bell me-2"></i>Notifications</a></li>
-        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_events') }}"><i class="fas fa-calendar-alt me-2"></i>Events/Calendar</a></li>
-        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_activity_log') }}"><i class="fas fa-clipboard-list me-2"></i>Activity Log</a></li>
-        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_support') }}"><i class="fas fa-question-circle me-2"></i>Support/Help</a></li>
-        <li class="nav-item mt-4"><a class="nav-link text-danger" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
-      </div>
-    </ul>
-  </aside>
   <!-- Main Content -->
   <div class="main-content" style="flex: 1; padding: 2rem;">
     <div class="container py-4">
       <h2 class="mb-4">System Settings</h2>
-      <div class="card">
+      <!-- Change Admin Email/Password -->
+      <div class="card mb-4">
+        <div class="card-header"><h5>Change Admin Email & Password</h5></div>
         <div class="card-body">
-          <p class="text-muted">This is a placeholder for system-wide settings. You can add configuration options here (e.g., site name, email, security, etc.).</p>
+          <form method="POST" action="{{ url_for('admin_settings') }}">
+            <input type="hidden" name="form_type" value="admin_account">
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-control" name="admin_email" value="{{ admin.email }}" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">New Password</label>
+              <input type="password" class="form-control" name="new_password" placeholder="Leave blank to keep current">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confirm Password</label>
+              <input type="password" class="form-control" name="confirm_password" placeholder="Leave blank to keep current">
+            </div>
+            <button type="submit" class="btn btn-primary">Update Account</button>
+          </form>
+        </div>
+      </div>
+      <!-- Notification Preferences -->
+      <div class="card mb-4">
+        <div class="card-header"><h5>Notification Preferences</h5></div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('admin_settings') }}">
+            <input type="hidden" name="form_type" value="notifications">
+            <div class="form-group">
+              <label><input type="checkbox" name="notify_new_user" {% if notify_new_user %}checked{% endif %}> Notify on new user registration</label>
+            </div>
+            <div class="form-group">
+              <label><input type="checkbox" name="notify_new_announcement" {% if notify_new_announcement %}checked{% endif %}> Notify on new announcement</label>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Preferences</button>
+          </form>
+        </div>
+      </div>
+      <!-- Company Info -->
+      <div class="card mb-4">
+        <div class="card-header"><h5>Company/Organization Info</h5></div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('admin_settings') }}" enctype="multipart/form-data">
+            <input type="hidden" name="form_type" value="company_info">
+            <div class="form-group">
+              <label class="form-label">Company Name</label>
+              <input type="text" class="form-control" name="company_name" value="{{ company_name }}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Contact Email</label>
+              <input type="email" class="form-control" name="company_contact" value="{{ company_contact }}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Logo</label>
+              <input type="file" class="form-control" name="company_logo">
+              {% if company_logo_url %}
+                <img src="{{ company_logo_url }}" alt="Logo" style="max-height: 60px; margin-top: 8px;">
+              {% endif %}
+            </div>
+            <button type="submit" class="btn btn-primary">Update Info</button>
+          </form>
+        </div>
+      </div>
+      <!-- Registration Settings -->
+      <div class="card mb-4">
+        <div class="card-header"><h5>User Registration Settings</h5></div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('admin_settings') }}">
+            <input type="hidden" name="form_type" value="registration">
+            <div class="form-group">
+              <label><input type="checkbox" name="registration_enabled" {% if registration_enabled %}checked{% endif %}> Enable user self-registration</label>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Default Role</label>
+              <select class="form-control" name="default_role">
+                <option value="user" {% if default_role == 'user' %}selected{% endif %}>User</option>
+                <option value="hr" {% if default_role == 'hr' %}selected{% endif %}>HR</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Settings</button>
+          </form>
+        </div>
+      </div>
+      <!-- Data Export/Backup -->
+      <div class="card mb-4">
+        <div class="card-header"><h5>Data Export / Backup</h5></div>
+        <div class="card-body">
+          <a href="{{ url_for('admin_user_report') }}" class="btn btn-success mb-2">Download Users CSV</a>
+          <a href="{{ url_for('admin_user_report_pdf') }}" class="btn btn-danger mb-2">Download Users PDF</a>
+          <a href="{{ url_for('admin_lunch_orders_report') }}" class="btn btn-success mb-2">Download Lunch Orders CSV</a>
+        </div>
+      </div>
+      <!-- Session Timeout/Security -->
+      <div class="card mb-4">
+        <div class="card-header"><h5>Session Timeout / Security</h5></div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('admin_settings') }}">
+            <input type="hidden" name="form_type" value="session">
+            <div class="form-group">
+              <label class="form-label">Session Timeout (minutes)</label>
+              <input type="number" class="form-control" name="session_timeout" min="5" max="1440" value="{{ session_timeout or 30 }}">
+            </div>
+            <button type="submit" class="btn btn-primary">Update Timeout</button>
+          </form>
+        </div>
+      </div>
+      <!-- Announcement Banner -->
+      <div class="card mb-4">
+        <div class="card-header"><h5>Custom Announcement Banner</h5></div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('admin_settings') }}">
+            <input type="hidden" name="form_type" value="banner">
+            <div class="form-group">
+              <label class="form-label">Banner Message</label>
+              <input type="text" class="form-control" name="banner_message" value="{{ banner_message }}">
+            </div>
+            <button type="submit" class="btn btn-primary">Update Banner</button>
+          </form>
+        </div>
+      </div>
+      <!-- Reset System Data -->
+      <div class="card mb-4">
+        <div class="card-header"><h5>Reset System Data</h5></div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('admin_settings') }}" onsubmit="return confirm('Are you sure you want to reset all demo/sample data? This cannot be undone.');">
+            <input type="hidden" name="form_type" value="reset">
+            <button type="submit" class="btn btn-danger">Reset Demo Data</button>
+          </form>
+        </div>
+      </div>
+      <!-- Manage Roles & Permissions -->
+      <div class="card mb-4">
+        <div class="card-header"><h5>Manage Roles & Permissions</h5></div>
+        <div class="card-body">
+          <p class="text-muted">Role management is currently limited. For advanced permissions, please contact the developer.</p>
+          <ul>
+            <li>Admin: Full access</li>
+            <li>HR: HR dashboard, manage users, announcements</li>
+            <li>User: Regular user access</li>
+          </ul>
         </div>
       </div>
       <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary mt-3">Back to Dashboard</a>

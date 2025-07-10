@@ -1,105 +1,125 @@
 {% extends 'base.html' %}
-{% block title %}Edit Announcement - Admin{% endblock %}
+{% block title %}Edit Announcement - Modern HR System{% endblock %}
 {% block content %}
-<div class="dashboard-container" style="display: flex; min-height: 100vh;">
-  <!-- Sidebar -->
-  <aside class="sidebar bg-white shadow-sm rounded p-3" style="width: 240px; min-height: 100vh;">
-    <h5 class="mb-4 text-primary">Admin Menu</h5>
-    <ul class="nav flex-column" style="padding-left: 0;">
-      <style>
-        .admin-bullet-nav .nav-item {
-          position: relative;
-          padding-left: 24px;
-          margin-bottom: 8px;
+<style>
+    /* Edit Announcement Container */
+    .edit-announcement-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 32px;
+        background-color: var(--bg-primary);
+        min-height: 100vh;
+    }
+
+    /* Header Styles */
+    .edit-announcement-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+        padding: 24px;
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+    }
+
+    /* Card Styles */
+    .edit-announcement-card {
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+
+    .edit-announcement-card-header {
+        background: var(--primary-color);
+        color: white;
+        padding: 20px 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .edit-announcement-card-body {
+        padding: 24px;
+    }
+
+    /* Image Preview */
+    .current-image-preview {
+        margin-top: 16px;
+        max-width: 200px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-light);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .edit-announcement-container {
+            padding: 24px;
         }
-        .admin-bullet-nav .nav-item:before {
-          content: "\2022";
-          position: absolute;
-          left: 8px;
-          color: #2196F3;
-          font-size: 1.2em;
+        
+        .edit-announcement-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
         }
-        .admin-bullet-nav .nav-link {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          color: #424242;
-          text-decoration: none;
-          font-weight: 500;
-          border-radius: 6px;
-          padding: 8px 12px;
-          transition: all 0.2s ease;
-        }
-        .admin-bullet-nav .nav-link.active, 
-        .admin-bullet-nav .nav-link:hover {
-          background: #E3F2FD;
-          color: #1565C0;
-        }
-        .admin-bullet-nav .nav-link i {
-          width: 20px;
-          text-align: center;
-        }
-      </style>
-      <div class="admin-bullet-nav">
-        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_dashboard') }}"><i class="fas fa-home"></i>Admin Dashboard</a></li>
-        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_users') }}"><i class="fas fa-users"></i>User Management</a></li>
-        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_hr_staff') }}"><i class="fas fa-user-tie"></i>HR Staff</a></li>
-        <li class="nav-item mb-2"><a class="nav-link active" href="{{ url_for('admin_announcements') }}"><i class="fas fa-bullhorn"></i>Announcements</a></li>
-        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_settings') }}"><i class="fas fa-cog"></i>System Settings</a></li>
-        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_management') }}"><i class="fas fa-chart-pie"></i>Reports</a></li>
-        <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('admin_notifications') }}"><i class="fas fa-bell"></i>Notifications</a></li>
-        <li class="nav-item mt-4"><a class="nav-link text-danger" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i>Logout</a></li>
-      </div>
-    </ul>
-  </aside>
-  
-  <!-- Main Content -->
-  <div class="main-content" style="flex: 1; padding: 2rem; background-color: #f5f9fc;">
-    <div class="container py-4">
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0 text-primary">Edit Announcement</h2>
-        <a href="{{ url_for('admin_announcements') }}" class="btn btn-outline-primary">
-          <i class="fas fa-arrow-left me-2"></i>Back to Announcements
-        </a>
-      </div>
-      
-      <div class="row justify-content-center">
-        <div class="col-lg-8">
-          <div class="card border-primary">
-            <div class="card-header bg-primary text-white">
-              <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Edit Announcement</h5>
-            </div>
-            <div class="card-body">
-              <form method="POST" enctype="multipart/form-data">
-                <div class="mb-3">
-                  <label for="title" class="form-label">Title</label>
-                  <input type="text" class="form-control" id="title" name="title" required 
-                         maxlength="100" value="{{ announcement.title }}">
-                </div>
-                <div class="mb-3">
-                  <label for="content" class="form-label">Content</label>
-                  <textarea class="form-control" id="content" name="content" rows="6" required>{{ announcement.content }}</textarea>
-                </div>
-                <div class="mb-4">
-                  <label for="image" class="form-label">Add Additional Image (optional)</label>
-                  <input class="form-control" type="file" id="image" name="image" accept="image/*">
-                  {% if announcement.image_url %}
-                  <div class="mt-2">
-                    <small class="text-muted">Current image: {{ announcement.image_url.split('/')[-1] }}</small>
-                  </div>
-                  {% endif %}
-                </div>
-                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                  <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save me-2"></i>Save Changes
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
+    }
+</style>
+
+<div class="edit-announcement-container">
+    <!-- Header -->
+    <div class="edit-announcement-header">
+        <div>
+            <h1><i class="fas fa-edit"></i> Edit Announcement</h1>
+            <p>Update announcement details</p>
         </div>
-      </div>
+        <a href="{{ url_for('admin_announcements') }}" class="btn">
+            <i class="fas fa-arrow-left"></i> Back to Announcements
+        </a>
     </div>
-  </div>
+
+    <!-- Edit Form -->
+    <div class="edit-announcement-card">
+        <div class="edit-announcement-card-header">
+            <i class="fas fa-edit"></i>
+            <h3>Edit Announcement Details</h3>
+        </div>
+        
+        <div class="edit-announcement-card-body">
+            <form method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" class="form-control" name="title" required 
+                           value="{{ announcement.title }}" maxlength="100">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Content</label>
+                    <textarea class="form-control" name="content" rows="6" required>{{ announcement.content }}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Update Image (optional)</label>
+                    <input type="file" class="form-control" name="image" accept="image/*">
+                    
+                    {% if announcement.image_url %}
+                    <div class="mt-3">
+                        <label class="form-label">Current Image</label>
+                        <div class="text-muted mb-2">{{ announcement.image_url.split('/')[-1] }}</div>
+                        <img src="{{ announcement.image_url }}" alt="Current image" class="current-image-preview">
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group" style="margin-top: 24px;">
+                    <button type="submit" class="btn" style="width: 100%;">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}
